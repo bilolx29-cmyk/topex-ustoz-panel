@@ -1,0 +1,9 @@
+{
+  "name": "topex-ustoz-panel",
+  "version": "1.0.0",
+  "description": "Topex Ustoz — O'qituvchi paneli",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
