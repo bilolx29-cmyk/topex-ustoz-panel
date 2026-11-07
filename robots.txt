@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /groups
+Disallow: /students
+Disallow: /chat
+Disallow: /schedule
+Disallow: /stats
+Disallow: /homework
+Disallow: /api/
+
+Sitemap: https://topex-ustoz-panel-bso2.vercel.app/sitemap.xml
