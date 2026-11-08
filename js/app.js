@@ -4,7 +4,7 @@
  * ==========================================================================
  */
 
-const S = Store.load();
+let S = Store.load();
 const $app = document.getElementById("app");
 
 const DAYS = ["", "Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba", "Yakshanba"];
@@ -28,7 +28,8 @@ let ui = {
   filter: "all",
   search: "",
   groupFilter: "",
-  chat: "g1",
+  chat: "ai",
+  aiAutoReply: true,
   attDate: null,
   groupTab: "att",
   salaryShown: false,
@@ -163,8 +164,8 @@ const todayISO = () => iso(new Date());
 const weekday = d => (d.getDay() === 0 ? 7 : d.getDay());
 const money = n => Number(n).toLocaleString("ru-RU").replace(/,/g, " ") + " so'm";
 const initials = n => (n || "?").split(/[\s|]+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("");
-const groupById = id => S.groups.find(g => g.id === id);
-const studentsOf = gid => S.students.filter(s => s.groupId === gid);
+const groupById = id => (S.groups || []).find(g => String(g.id) === String(id));
+const studentsOf = gid => (S.students || []).filter(s => String(s.groupId) === String(gid));
 const save = () => Store.save();
 const roundPct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
 
@@ -226,22 +227,26 @@ function closeModal() {
 
 function attStats(gid) {
   let k = 0, t = 0;
+  if (!S.attendance || typeof S.attendance !== "object") return { present: 0, total: 0, pct: 0 };
   Object.keys(S.attendance).forEach(key => {
-    if (gid && key.split("|")[0] !== gid) return;
-    Object.values(S.attendance[key]).forEach(v => {
-      t++;
-      if (v === "keldi") k++;
-    });
+    if (gid && String(key.split("|")[0]) !== String(gid)) return;
+    const rec = S.attendance[key];
+    if (rec && typeof rec === "object") {
+      Object.values(rec).forEach(v => {
+        t++;
+        if (v === "keldi") k++;
+      });
+    }
   });
   return { present: k, total: t, pct: roundPct(k, t) };
 }
 
 function studentAvgGrade(sid, gid) {
-  if (!S.grades) return null;
+  if (!S.grades || typeof S.grades !== "object") return null;
   let sum = 0, count = 0;
   Object.keys(S.grades).forEach(k => {
     const parts = k.split("|");
-    if (parts[1] === sid && (!gid || parts[0] === gid)) {
+    if (String(parts[1]) === String(sid) && (!gid || String(parts[0]) === String(gid))) {
       const g = S.grades[k];
       const val = typeof g === "number" ? g : (g && g.score ? g.score : 0);
       if (val > 0) {
@@ -254,7 +259,7 @@ function studentAvgGrade(sid, gid) {
 }
 
 function debtors() {
-  return S.students.filter(s => s.balance < 0);
+  return (S.students || []).filter(s => s.balance < 0);
 }
 
 /* ==========================================================================
@@ -264,7 +269,10 @@ function debtors() {
 /* 1. Asosiy */
 function pageDashboard() {
   const wd = weekday(new Date());
-  const todayGroups = S.groups.filter(g => g.days.includes(wd));
+  const todayGroups = (S.groups || []).filter(g => {
+    const days = Array.isArray(g.days) ? g.days : (typeof g.days === "string" ? g.days.split(",").map(Number) : []);
+    return days.includes(wd);
+  });
   const st = attStats();
   const announcements = S.announcements || [];
 
@@ -331,8 +339,8 @@ function pageDashboard() {
               return `
                 <div class="card" style="padding:14px;background:var(--bg);display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer" data-act="open-group" data-id="${g.id}">
                   <div>
-                    <div style="font-weight:800;font-size:14px;margin-bottom:2px">${esc(g.name)}</div>
-                    <div style="font-size:12.5px;color:var(--muted)">${esc(g.course)} · ${esc(g.time.split(' - ')[0])} · ${esc(g.room)}</div>
+                    <div style="font-weight:800;font-size:14px;margin-bottom:2px">${esc(g.name || "Guruh")}</div>
+                    <div style="font-size:12.5px;color:var(--muted)">${esc(g.course || g.name || "")} · ${esc(g.time ? String(g.time).split(' - ')[0] : (g.timeFrom || "09:00"))} · ${esc(g.room || g.roomId || "304-laboratoriya")}</div>
                   </div>
                   <div style="display:flex;align-items:center;gap:8px">
                     <span class="badge primary">${count} o'quvchi</span>
@@ -383,13 +391,18 @@ function pageDashboard() {
 /* 2. Guruhlar */
 function pageGroups() {
   const wd = weekday(new Date());
-  let groups = S.groups.slice();
-  if (ui.filter === "today") groups = groups.filter(g => g.days.includes(wd));
+  let groups = (S.groups || []).slice();
+  if (ui.filter === "today") {
+    groups = groups.filter(g => {
+      const days = Array.isArray(g.days) ? g.days : (typeof g.days === "string" ? g.days.split(",").map(Number) : []);
+      return days.includes(wd);
+    });
+  }
 
   return `
     <div class="row-head" style="margin-top:0">
       <div>
-        <h2>Guruhlar (${S.groups.length})</h2>
+        <h2>Guruhlar (${(S.groups || []).length})</h2>
         <span style="color:var(--muted);font-size:13px">Barcha biriktirilgan o'quv guruhlari</span>
       </div>
       <div class="toolbar">
@@ -417,17 +430,23 @@ function pageGroups() {
           ${groups.map(g => {
             const gStudents = studentsOf(g.id);
             const gAtt = attStats(g.id);
-            const isToday = g.days.includes(wd);
+            const days = Array.isArray(g.days) ? g.days : (typeof g.days === "string" ? g.days.split(",").map(Number) : []);
+            const isToday = days.includes(wd);
+            const roomClean = String(g.room || g.roomId || "304-laboratoriya")
+              .replace("3-bino, ", "")
+              .replace("2-bino, ", "")
+              .replace("1-bino, ", "");
+            const timeClean = g.time ? String(g.time).split(' - ')[0] : (g.timeFrom || "09:00");
             return `
               <tr class="click" data-act="open-group" data-id="${g.id}">
                 <td>
-                  <b>${esc(g.name)}</b>
+                  <b>${esc(g.name || "Guruh")}</b>
                   ${isToday ? `<span class="badge ok" style="margin-left:6px">Bugun</span>` : ""}
                 </td>
-                <td>${esc(g.course)}</td>
+                <td>${esc(g.course || g.name || "—")}</td>
                 <td><b>${gStudents.length}</b></td>
-                <td>${esc(g.room.replace("3-bino, ", "").replace("2-bino, ", "").replace("1-bino, ", ""))}</td>
-                <td>${g.time.split(' - ')[0]}</td>
+                <td>${esc(roomClean)}</td>
+                <td>${esc(timeClean)}</td>
                 <td>
                   <div style="display:flex;align-items:center;gap:8px">
                     <div class="progress-track" style="width:60px;height:6px">
@@ -456,7 +475,7 @@ function pageGroup(id) {
 
   const date = ui.attDate || todayISO();
   const key = g.id + "|" + date;
-  const rec = S.attendance[key] || {};
+  const rec = (S.attendance && S.attendance[key]) ? S.attendance[key] : {};
   const list = studentsOf(g.id);
   const tab = ui.groupTab || "att";
 
@@ -587,8 +606,8 @@ function pageGroup(id) {
 
     <div class="row-head" style="margin-top:0">
       <div>
-        <h2>${esc(g.name)}</h2>
-        <span style="color:var(--muted);font-size:13px">${esc(g.course)} · ${esc(g.room)}</span>
+        <h2>${esc(g.name || "Guruh")}</h2>
+        <span style="color:var(--muted);font-size:13px">${esc(g.course || g.name || "")} · ${esc(g.room || g.roomId || "304-laboratoriya")}</span>
       </div>
     </div>
 
@@ -665,19 +684,25 @@ function pageSchedule() {
 
     <div class="grid c3">
       ${daysList.map(d => {
-        const dClasses = S.groups.filter(g => g.days.includes(d));
+        const dClasses = (S.groups || []).filter(g => {
+          const days = Array.isArray(g.days) ? g.days : (typeof g.days === "string" ? g.days.split(",").map(Number) : []);
+          return days.includes(d);
+        });
         return `
           <div class="card" style="padding:16px">
             <h3 style="font-size:15px;margin-bottom:10px">${DAYS[d]}</h3>
             <div style="display:flex;flex-direction:column;gap:8px">
-              ${dClasses.map(g => `
+              ${dClasses.map(g => {
+                const timeText = g.time ? String(g.time).split(' - ')[0] : (g.timeFrom || "09:00");
+                const roomText = esc(g.room || g.roomId || "304-laboratoriya");
+                return `
                 <div class="card" style="padding:10px 12px;cursor:pointer" data-act="open-group" data-id="${g.id}">
-                  <b>${esc(g.name)}</b>
+                  <b>${esc(g.name || "Guruh")}</b>
                   <div style="font-size:12px;color:var(--muted);margin-top:2px">
-                    ${g.time.split(' - ')[0]} · ${esc(g.room)}
+                    ${esc(timeText)} · ${roomText}
                   </div>
                 </div>
-              `).join("")}
+              `}).join("")}
               ${dClasses.length ? "" : `<div style="color:var(--muted);font-size:12px">Dars yo'q</div>`}
             </div>
           </div>
@@ -776,37 +801,241 @@ function pageHomework() {
   `;
 }
 
+/* Markdown formatlash (AI javoblari uchun) */
+function renderChatMarkdown(text) {
+  if (!text) return "";
+  let html = esc(text);
+
+  // Ko'p qatorli kod bloklari ```lang\ncode\n```
+  html = html.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+    const rawCode = code.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
+    return `<div class="chat-code-block">
+      <div class="chat-code-header">
+        <span>${lang || 'kod'}</span>
+        <button type="button" class="chat-copy-btn" data-act="copy-code" data-code="${esc(rawCode.trim())}">Nusxa olish</button>
+      </div>
+      <pre><code>${code.trim()}</code></pre>
+    </div>`;
+  });
+
+  // Bir qatorli kod `code`
+  html = html.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+
+  // Qalin matn **matn**
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+
+  // Qiya matn *matn*
+  html = html.replace(/\*([^*]+)\*/g, '<i>$1</i>');
+
+  // Qator tashlash
+  html = html.replace(/\n/g, '<br>');
+
+  return html;
+}
+
+// Mijoz tomonidagi sun'iy intellekt (Fallback)
+function generateClientAIResponse(message, context = {}) {
+  const q = String(message || '').trim().toLowerCase();
+  const teacherName = context.teacherName || (S.teacher && S.teacher.name) || "Ustoz";
+  const groupName = context.groupName || "Topex guruhi";
+
+  if (/^(salom|assalomu\s*alaykum|hayrli\s*(kun|tong|kech)|privet|hi|hello)/i.test(q)) {
+    return `Assalomu alaykum, hurmatli **${teacherName}**! 🌟\n\nMen **Topex AI** — sizning dars va metodika bo'yicha sun'iy intellekt yordamchingizman. Bugun qanday yordam bera olaman?\n\n• 📋 **Dars rejasi va konspekt** tuzish (45 yoki 80 daqiqalik)\n• 💡 **Amaliy mashq va uy vazifasi** tayyorlash\n• 💻 **Dasturlash (React, JavaScript, Python, SQL)** bo'yicha kod va tushuntirish\n• ❓ **Oraliq nazorat uchun test savollari** tuzish\n• 👥 **${groupName} guruhi faolligini oshirish**\n\nSavolingizni yoki mavzuni yozing, darhol javob beraman!`;
+  }
+
+  if (/(sen\s*kimsan|o'zing\s*haqingda|kim\s*bu|vazifang|botmisan|bot\s*haqida)/i.test(q)) {
+    return `🤖 **Men — Topex Ustoz AI yordamchisiman!**\n\nMen TOPEX Texnikum o'qituvchilari uchun maxsus integratsiya qilingan sun'iy intellekt tizimiman.\n\n**Mening vazifalarim:**\n1. **Dars konspektlari:** Darsning har bir bosqichini daqiqama-daqiqa rejalashtirib berish.\n2. **Texnik kodlar:** Frontend, Backend, Ma'lumotlar bazasi bo'yicha toza kod namunalari va xatolarni tahlil qilish.\n3. **Baholash va testlar:** Murakkablik darajasi bo'yicha test savollari va to'g'ri javoblar kalitini tuzish.\n4. **Pedagogika:** Talabalar bilan ishlash, davomatni nazorat qilish va darsni interaktiv o'tish metodlari.`;
+  }
+
+  if (/(rahmat|katta\s*rahmat|tashakkur|zo'r|super|gap\s*yo'q|tushundim|barakalla|yaxshi)/i.test(q)) {
+    return `Arzimaydi, **${teacherName}**! Sizga foydam tekkanidan juda xursandman. 🤝✨\n\nDarslaringiz sermahsul o'tsin! Yangi savollar yoki vazifalar bo'lsa, bemalol murojaat qiling.`;
+  }
+
+  if (/(dars\s*reja|konspekt|dars\s*ishlanma|darsni\s*reja|mavzu\s*reja)/i.test(q)) {
+    return `📋 **80 daqiqalik namunaviy dars rejasi:**\n\n**Mavzu:** Interaktiv amaliy mashg'ulot\n**Guruh:** ${groupName}\n**O'qituvchi:** ${teacherName}\n\n---\n\n### ⏱️ Dars bosqichlari:\n\n1. **Tashkiliy qism va Davomat (5 daqiqa):**\n   - Davomatni Topex tizimida belgilash.\n   - O'tgan mavzu bo'yicha 3 ta tezkor savol (Warm-up).\n\n2. **Yangi mavzu bayoni (25 daqiqa):**\n   - Nazariy tushunchalar va amaliy ahamiyati.\n   - Doskada yoki ekranda jonli namoyish (Live coding / misollar).\n   - Talabalar bilan "savol-javob" dialogi.\n\n3. **Amaliy mustaqil mashg'ulot (35 daqiqa):**\n   - Talabalarga individual va juftlikda topshiriq berish.\n   - O'qituvchi tomonidan auditoriya bo'ylab yo'naltirish va xatolarni ko'rsatish.\n\n4. **Mustahkamlash va Baholash (10 daqiqa):**\n   - 2 nafar talabaning ishini umumiy ekranda ko'rib chiqish.\n   - Topex Jurnalida ballarni qo'yish (1-5 baho).\n\n5. **Xulosa va Uyga vazifa (5 daqiqa):**\n   - Asosiy xulosalar va keyingi dars mavzusi anonsi.\n\n💡 *Aniq mavzuni aytsangiz (masalan, "React State" yoki "Python Funksiyalar"), aynan shu mavzuga mos konspekt tayyorlayman!*`;
+  }
+
+  if (/(uyga\s*vazifa|vazifa\s*tuz|topshiriq|amaliy\s*ish|homework)/i.test(q)) {
+    return `💡 **Guruh uchun 3 bosqichli amaliy uy vazifasi:**\n\n**Guruh:** ${groupName}\n\n---\n\n### 🟢 1-Bosqich (Boshlang'ich — 60-70 ball):\n- Darsda ko'rsatilgan kodni mustaqil qaytadan yozing va har bir qatorga izoh (komment) bering.\n- Natijani skrinshot qilib daftarga yoki platformaga yuklang.\n\n### 🟡 2-Bosqich (O'rta — 70-85 ball):\n- Loyihaga kamida 2 ta yangi funksiya (masalan: qidiruv, saralash yoki tozalash) qo'shing.\n- Foydalanuvchi noto'g'ri qiymat kiritganda xatolik xabarini ko'rsating.\n\n### 🔴 3-Bosqich (A'lochi / Murakkab — 85-100 ball):\n- Loyihani to'liq yakunlab, zamonaviy UI dizayn bering.\n- GitHub repositoriyasiga yuklab, havolasini taqdim eting.\n\n🎯 *Ushbu vazifani "Vazifalar" bo'limiga to'g'ridan-to'g'ri nusxalashingiz mumkin!*`;
+  }
+
+  if (/(test|nazorat\s*savol|savollar\s*tuz|quiz|imtihon)/i.test(q)) {
+    return `📝 **Mavzuni tekshirish uchun 5 ta nazorat test savoli:**\n\n---\n\n**1-savol:** Dasturlashda o'zgarmas qiymatlarni saqlash uchun qaysi kalit so'z ishlatiladi?\n- A) \`var\`\n- B) \`let\`\n- C) \`const\` ✅\n- D) \`static\`\n\n**2-savol:** Funksiyaning asosiy afzalligi nimada?\n- A) Kod hajmini ko'paytirish\n- B) Kodni qayta ishlatish (reusability) va tartibga solish ✅\n- C) Faqat grafik chizish\n- D) Kompyuterni o'chirish\n\n**3-savol:** Xatoliklarni xavfsiz ushlash uchun qaysi blok qo'llaniladi?\n- A) \`for...while\`\n- B) \`try...catch\` ✅\n- C) \`if...else\`\n- D) \`break...continue\`\n\n**4-savol:** Asinxron kod bilan ishlashda qaysi konstruktsiya qo'llaniladi?\n- A) \`async / await\` ✅\n- B) \`input / output\`\n- C) \`push / pop\`\n- D) \`class / extends\`\n\n**5-savol:** Git tizimida o'zgarishlarni commit qilish buyrug'i qaysi?\n- A) \`git pull\`\n- B) \`git commit -m "xabar"\` ✅\n- C) \`git clone\`\n- D) \`git status\`\n\n---\n✅ **To'g'ri javoblar:** 1-C, 2-B, 3-B, 4-A, 5-B.`;
+  }
+
+  if (/(react|hooks|usestate|useeffect|component|jsx|props|frontend)/i.test(q)) {
+    return `⚛️ **React bo'yicha namunaviy kod va tushuntirish:**\n\nKomponent holati (State) va nojo'ya ta'sirlarni (Side-effect) boshqarish:\n\n\`\`\`jsx\nimport React, { useState, useEffect } from 'react';\n\nfunction AttendanceCounter() {\n  const [studentsCount, setStudentsCount] = useState(0);\n  const [group, setGroup] = useState("${groupName}");\n\n  // Sarlavhani yangilab turish\n  useEffect(() => {\n    document.title = \`\${group}: \${studentsCount} ta talaba keldi\`;\n  }, [studentsCount, group]);\n\n  return (\n    <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '12px' }}>\n      <h3>{group} — Dars Davomati</h3>\n      <p style={{ fontSize: '18px' }}>Kelganlar: <b>{studentsCount}</b> nafar</p>\n      \n      <div style={{ display: 'flex', gap: '8px' }}>\n        <button onClick={() => setStudentsCount(c => c + 1)}>+ Keldi</button>\n        <button onClick={() => setStudentsCount(c => Math.max(0, c - 1))}>- Kamaytirish</button>\n        <button onClick={() => setStudentsCount(0)}>Qayta o'rnatish</button>\n      </div>\n    </div>\n  );\n}\n\nexport default AttendanceCounter;\n\`\`\`\n\n💡 **Eslatma:** \`useState\` komponent qayta render bo'lganda ham o'zgaruvchi qiymatini saqlab qoladi.`;
+  }
+
+  if (/(python|django|fastapi|flask|backend|pip|list|dict)/i.test(q)) {
+    return `🐍 **Python dasturlash tili bo'yicha misol:**\n\nTalabalar ballarini hisoblovchi toza va ixcham funksiya:\n\n\`\`\`python\n# O'quvchilar ro'yxati\nstudents_data = [\n    {"name": "Azizbek Karimov", "grades": [5, 4, 5, 5]},\n    {"name": "Dilnoza Aliyeva", "grades": [4, 5, 4, 4]},\n    {"name": "Bobur Saidov", "grades": [3, 4, 4, 3]}\n]\n\ndef analyze_students(students):\n    print("📊 Guruh o'quvchilari natijalari:")\n    for s in students:\n        avg = sum(s["grades"]) / len(s["grades"])\n        status = "A'lochi" if avg >= 4.5 else ("Yaxshi" if avg >= 3.5 else "Qoniqarli")\n        print(f"👤 {s['name']}: O'rtacha ball = {avg:.1f} ({status})")\n\nanalyze_students(students_data)\n\`\`\`\n\n💡 Talabalarga tushuntirish uchun: \`sum()\` va \`len()\` o'rnatilgan Python funksiyalari hisoblanadi.`;
+  }
+
+  if (/(javascript|js|async|await|promise|array|map|filter|reduce)/i.test(q)) {
+    return `⚡ **JavaScript (ES6+) zamonaviy usullari:**\n\nMassivlar bilan ishlash va ma'lumotlarni saralash:\n\n\`\`\`javascript\n// O'quvchilar ro'yxati\nconst students = [\n  { id: 1, name: "Azizbek", score: 95 },\n  { id: 2, name: "Dilnoza", score: 88 },\n  { id: 3, name: "Bobur", score: 72 }\n];\n\n// 1. A'lochilarni filtrlash (score >= 85)\nconst topStudents = students.filter(s => s.score >= 85);\nconsole.log("A'lochilar:", topStudents);\n\n// 2. Ismlar ro'yxatini olish\nconst names = students.map(s => s.name);\nconsole.log("Ismlar:", names);\n\n// 3. O'rtacha ballni hisoblash (reduce)\nconst totalScore = students.reduce((sum, s) => sum + s.score, 0);\nconst avgScore = (totalScore / students.length).toFixed(1);\nconsole.log("O'rtacha ball:", avgScore);\n\`\`\``;
+  }
+
+  if (/(davomat|kelmadi|kelmayapti|qiziqish|sust|faol\s*emas|motivatsiya)/i.test(q)) {
+    return `👥 **Talabalar davomati va faolligini oshirish bo'yicha tavsiyalar:**\n\n1. **Dars boshida tezkor viktorina:** Darsning dastlabki 5 daqiqasida o'tgan mavzudan qiziqarli savol bering va faol javob berganlarga Topex Jurnalida +1 ball qo'shing.\n2. **Juftlikda ishlash (Pair work):** Dars qoldiruvchi yoki sust o'quvchini kuchliroq talaba bilan juft qiling.\n3. **Amaliy loyihalar:** Quruq nazariya o'rniga "Bu bilim bilan qanday real sayt/dastur quramiz" degan maqsad qo'ying.\n4. **Shaxsiy suhbat:** Darsdan so'ng 2 daqiqa xoli suhbatlashib, qiyinlik tug'dirayotgan joyini so'rang.`;
+  }
+
+  return `💡 **Topex AI Yordamchisi javobi:**\n\nHurmatli **${teacherName}**, savolingiz:\n*"${message}"*\n\nUshbu masala bo'yicha asosiy tavsiyalar:\n\n1. **Bosqichma-bosqichlik:** Mavzuni oddiy tushunchalardan murakkablariga qarab tushuntiring.\n2. **Jonli amaliyot:** Har bir qoidani kod yoki real hayotiy misol bilan mustahkamlang.\n3. **Qayta aloqa:** Mavzu so'ngida talabalardan 1-2 ta misol yechishni so'rang.\n\nAniqroq mavzu yoki kod namunasi kerak bo'lsa, mavzuni yozing — darhol tayyorlab beraman! ✨`;
+}
+
+// Server yoki mijoz orqali AI javobini olish
+async function requestAIResponse(userText, chatId) {
+  const g = groupById(chatId);
+  const groupName = g ? g.name : "Topex guruhi";
+  const teacherName = (S.teacher && S.teacher.name) || "Ustoz";
+
+  try {
+    const res = await API.chatWithAI(userText, groupName, chatId);
+    if (res && res.reply) return res.reply;
+  } catch (e) {
+    console.warn("AI server javobi olinmadi, mijoz dvigateli ishlatilmoqda:", e.message);
+  }
+
+  return generateClientAIResponse(userText, { teacherName, groupName, groupId: chatId });
+}
+
+function scrollChatToBottom() {
+  setTimeout(() => {
+    const el = document.getElementById("msgs");
+    if (el) el.scrollTop = el.scrollHeight;
+  }, 40);
+}
+
 /* 7. Chat */
 function pageChat() {
-  if (!groupById(ui.chat) && S.groups[0]) ui.chat = S.groups[0].id;
-  const g = groupById(ui.chat);
+  S.chats = S.chats || {};
+  if (!ui.chat) ui.chat = "ai";
+
+  // Agar guruh tanlangan bo'lsa, mavjudligini tekshirish
+  if (ui.chat !== "ai" && !groupById(ui.chat) && S.groups && S.groups[0]) {
+    ui.chat = S.groups[0].id;
+  }
+
+  const isAi = ui.chat === "ai";
+  const g = isAi ? null : groupById(ui.chat);
   const msgs = S.chats[ui.chat] || [];
+  const groupsList = S.groups || [];
+
+  scrollChatToBottom();
 
   return `
     <div class="chat">
+      <!-- Chap tomon: Chatlar ro'yxati -->
       <div class="card chat-list">
-        ${S.groups.map(x => `
-          <div class="chat-item ${x.id === ui.chat ? 'on' : ''}" data-act="open-chat" data-id="${x.id}">
-            <div class="avatar" style="width:30px;height:30px;font-size:12px">${initials(x.name)}</div>
-            <b>${esc(x.name)}</b>
+        <!-- 1. AI Yordamchi (Doimo yuqorida qadalgan) -->
+        <div class="chat-item ${isAi ? 'on' : ''}" data-act="open-chat" data-id="ai">
+          <div class="avatar ai-avatar" style="width:34px;height:34px;font-size:14px">🤖</div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <b>Topex AI Assistent</b>
+              <span class="ai-badge-pill">✨ AI</span>
+            </div>
+            <div style="font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              Ta'lim va dars yordamchisi
+            </div>
           </div>
-        `).join("")}
+        </div>
+
+        ${groupsList.length ? `
+          <div class="chat-section-label">O'quv guruhlari (${groupsList.length})</div>
+          ${groupsList.map(x => {
+            const isCur = String(x.id) === String(ui.chat);
+            const stuCount = studentsOf(x.id).length;
+            return `
+              <div class="chat-item ${isCur ? 'on' : ''}" data-act="open-chat" data-id="${x.id}">
+                <div class="avatar" style="width:32px;height:32px;font-size:12px;background:${esc(x.color || '#6366f1')}">${initials(x.name)}</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(x.name)}</div>
+                  <div style="font-size:11.5px;color:var(--muted)">${stuCount} ta o'quvchi</div>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        ` : ""}
       </div>
 
+      <!-- O'ng tomon: Chat oynasi -->
       <div class="card chat-box">
         <div class="chat-head">
-          <b>${g ? esc(g.name) : "Chat"}</b>
+          ${isAi ? `
+            <div class="chat-head-main">
+              <div class="chat-head-info">
+                <div class="avatar ai-avatar" style="width:36px;height:36px;font-size:16px">🤖</div>
+                <div>
+                  <div class="chat-head-title">Topex AI Ta'lim Yordamchisi <span class="badge primary-sm">✨ GPT / Gemini</span></div>
+                  <div class="chat-head-sub">🟢 Doimo onlayn · Dars rejalari, kodlar, testlar va metodika</div>
+                </div>
+              </div>
+              <div class="chat-head-actions">
+                <button class="btn ghost sm" data-act="clear-chat" data-id="ai" title="Suhbat tarixini tozalash">${icon("trash", 13)} Tozalash</button>
+              </div>
+            </div>
+          ` : `
+            <div class="chat-head-main">
+              <div class="chat-head-info">
+                <div class="avatar" style="width:36px;height:36px;font-size:13px;background:${esc(g ? g.color : '#6366f1')}">${initials(g ? g.name : "Guruh")}</div>
+                <div>
+                  <div class="chat-head-title">${g ? esc(g.name) : "Guruh chati"}</div>
+                  <div class="chat-head-sub">${g ? esc(g.course || "") : ""} · ${studentsOf(ui.chat).length} ta o'quvchi</div>
+                </div>
+              </div>
+              <div class="chat-head-actions">
+                <label class="ai-toggle-label" title="AI avto-javobi yoqilganda savollaringizga sun'iy intellekt javob beradi">
+                  <input type="checkbox" id="ai-auto-toggle" ${ui.aiAutoReply !== false ? "checked" : ""}>
+                  <span>✨ AI Avto-javob</span>
+                </label>
+              </div>
+            </div>
+          `}
         </div>
 
         <div class="msgs" id="msgs">
-          ${msgs.map(m => `
-            <div class="msg ${m.from === "me" ? "me" : ""}">
-              <div>${esc(m.text)}</div>
-              <small>${new Date(m.t).toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })}</small>
+          ${msgs.length ? msgs.map(m => {
+            const isMe = m.from === "me";
+            const isAiMsg = m.from === "ai" || m.sender === "Topex AI";
+            const timeStr = m.t ? new Date(m.t).toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }) : "";
+            
+            if (isAiMsg) {
+              return `
+                <div class="msg ai">
+                  <div class="msg-sender">
+                    <span class="avatar sm ai-avatar" style="width:18px;height:18px;font-size:10px">🤖</span>
+                    <span>Topex AI</span>
+                    <span class="ai-badge-pill">Javob</span>
+                  </div>
+                  <div>${renderChatMarkdown(m.text)}</div>
+                  <small>${timeStr}</small>
+                </div>
+              `;
+            }
+            
+            return `
+              <div class="msg ${isMe ? "me" : ""}">
+                ${!isMe && m.sender ? `<div class="msg-sender">${esc(m.sender)}</div>` : ""}
+                <div>${esc(m.text)}</div>
+                <small>${timeStr}</small>
+              </div>
+            `;
+          }).join("") : `
+            <div style="text-align:center;padding:40px 20px;color:var(--muted)">
+              <div style="font-size:42px;margin-bottom:10px">${isAi ? "🤖" : "💬"}</div>
+              <h3 style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px">
+                ${isAi ? "Topex AI Yordamchisiga xush kelibsiz!" : "Guruh suhbati bo'sh"}
+              </h3>
+              <p style="font-size:13px;max-width:440px;margin:0 auto">
+                ${isAi ? "Dars rejalari, konspektlar, dasturlash kodlari, test savollari yoki metodik yordam bo'yicha istalgan savolingizni yozing." : "Xabar yozing yoki quyidagi tayyor tugmalardan foydalaning."}
+              </p>
             </div>
-          `).join("")}
+          `}
+
           ${ui.isTyping ? `
-            <div class="typing-box">
+            <div class="typing-box" style="animation:fadeIn 0.2s">
+              <span class="avatar sm ai-avatar" style="width:18px;height:18px;font-size:10px">🤖</span>
+              <span>Topex AI javob tayyorlamoqda...</span>
               <span class="typing-dot"></span>
               <span class="typing-dot"></span>
               <span class="typing-dot"></span>
@@ -814,9 +1043,18 @@ function pageChat() {
           ` : ""}
         </div>
 
+        <!-- Tezkor AI takliflari (Quick Chips) -->
+        <div class="chat-chips">
+          <button type="button" class="chat-chip" data-act="quick-prompt" data-p="80 daqiqalik dars konspekti tuzib ber">📋 Dars rejasi (80 daqiqa)</button>
+          <button type="button" class="chat-chip" data-act="quick-prompt" data-p="Mavzu bo'yicha 3 bosqichli uy vazifasi tuzib ber">💡 Yangi uy vazifasi</button>
+          <button type="button" class="chat-chip" data-act="quick-prompt" data-p="Mavzu bo'yicha 5 ta test savoli tuzib ber">❓ 5 ta test savoli</button>
+          <button type="button" class="chat-chip" data-act="quick-prompt" data-p="React Hooks useState va useEffect bo'yicha misol kod yozib ber">⚛️ React Hooks kodi</button>
+          <button type="button" class="chat-chip" data-act="quick-prompt" data-p="Darsda talabalar davomatini va faolligini qanday oshirish mumkin?">👥 Faollikni oshirish</button>
+        </div>
+
         <form class="chat-form" id="chat-form">
-          <input name="text" placeholder="Xabar yozing..." autocomplete="off" required>
-          <button class="btn sm" type="submit">${icon("send", 14)}</button>
+          <input name="text" id="chat-input" placeholder="${isAi ? "AI ga savol yoki mavzu yozing (masalan: 'Python funksiyalar dars rejasi')..." : "Xabar yozing (AI avtomatik javob beradi)..."}" autocomplete="off" required>
+          <button class="btn sm" type="submit" id="chat-send-btn" title="Yuborish">${icon("send", 14)}</button>
         </form>
       </div>
     </div>
@@ -891,7 +1129,7 @@ function pageProfile(tab = "personal") {
 /* Shell va Router */
 const NAV = [
   ["dashboard", "dashboard", "Asosiy"],
-  ["groups", "schedule", "Guruhlar"],
+  ["groups", "groups", "Guruhlar"],
   ["schedule", "schedule", "Jadval"],
   ["students", "students", "O'quvchilar"],
   ["homework", "homework", "Vazifalar"],
@@ -909,22 +1147,52 @@ function loginPage() {
           <span>Topex Ustoz</span>
         </div>
 
-        <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">Kirish</h2>
+        <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">Tizimga kirish</h2>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:18px">O'qituvchi boshqaruv paneli</p>
+
+        <div id="login-error" class="login-error hidden"></div>
 
         <div class="field">
-          <label>Login</label>
-          <input name="login" value="ustoz" required autofocus>
+          <label>Telefon raqam</label>
+          <input type="tel" name="login" placeholder="+998 90 044 80 04" required autofocus autocomplete="tel" inputmode="tel">
         </div>
         <div class="field">
           <label>Parol</label>
-          <input type="password" name="pw" value="1234" required>
+          <div class="pw-toggle-wrap">
+            <input type="password" name="pw" id="login-pw-input" placeholder="Parolingizni kiriting" required autocomplete="current-password">
+            <button type="button" class="pw-toggle-btn" id="pw-toggle-btn" title="Parolni ko'rsatish/yashirish">
+              ${icon("eye", 18)}
+            </button>
+          </div>
         </div>
 
-        <button class="btn" style="width:100%;margin-top:8px" type="submit">Kirish</button>
-        <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:14px">Login: <b>ustoz</b>, Parol: <b>1234</b></div>
+        <button class="btn" id="login-submit-btn" style="width:100%;margin-top:12px;height:42px" type="submit">Kirish</button>
+        
+        <div class="login-info-box">
+          <svg style="display:inline;vertical-align:middle;margin-right:4px" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Ustoz hisobi <b>TOPEX CRM</b> administratori tomonidan yaratiladi. Tizimga kirish uchun administrator bergan telefon raqam va paroldan foydalaning.
+        </div>
       </form>
     </div>
   `;
+}
+
+function closeMobileSidebar() {
+  ui.menu = false;
+  const sidebar = document.getElementById("sidebar");
+  const backdrop = document.getElementById("sidebar-backdrop");
+  if (sidebar) sidebar.classList.remove("open");
+  if (backdrop) backdrop.classList.remove("open");
+  document.body.classList.remove("sidebar-open-locked");
+}
+
+function openMobileSidebar() {
+  ui.menu = true;
+  const sidebar = document.getElementById("sidebar");
+  const backdrop = document.getElementById("sidebar-backdrop");
+  if (sidebar) sidebar.classList.add("open");
+  if (backdrop) backdrop.classList.add("open");
+  document.body.classList.add("sidebar-open-locked");
 }
 
 let currentViewKey = null;
@@ -959,6 +1227,7 @@ function render() {
   const activeNav = route === "group" ? "groups" : route;
 
   $app.innerHTML = `
+    <div class="sidebar-backdrop ${ui.menu ? "open" : ""}" id="sidebar-backdrop" data-act="close-sidebar-mobile"></div>
     <div class="layout ${ui.sidebarCollapsed ? "sidebar-collapsed" : ""}">
       <aside class="sidebar ${ui.menu ? "open" : ""} ${ui.sidebarCollapsed ? "collapsed" : ""}" id="sidebar">
         <div class="sidebar-timer-bar" id="sidebar-timer-bar" title="10 soniyada yopiladi"></div>
@@ -971,7 +1240,7 @@ function render() {
             <button class="icon-btn sm sidebar-pin-btn ${ui.sidebarPinned ? "active" : ""}" data-act="toggle-sidebar-pin" title="${ui.sidebarPinned ? "Qadalgan (o'zi yopilmaydi). Avto-rejimga o'tish uchun bosing" : "Qadab qo'yish (avto-yopilmasligi uchun)"}">
               ${icon("pin", 15)}
             </button>
-            <button class="icon-btn sm sidebar-toggle-btn" data-act="close-sidebar-now" title="Sidebarni darhol yopish (10 soniya kutmasdan)">
+            <button class="icon-btn sm sidebar-toggle-btn" data-act="close-sidebar-now" title="Sidebarni darhol yopish">
               ${icon("chevronLeft", 16)}
             </button>
           </div>
@@ -1164,7 +1433,18 @@ window.addEventListener("hashchange", () => {
 });
 
 /* Hodisalar */
-document.addEventListener("click", e => {
+document.addEventListener("click", async e => {
+  const toggleBtn = e.target.closest("#pw-toggle-btn");
+  if (toggleBtn) {
+    const pwInput = document.getElementById("login-pw-input");
+    if (pwInput) {
+      const isPw = pwInput.type === "password";
+      pwInput.type = isPw ? "text" : "password";
+      toggleBtn.innerHTML = icon(isPw ? "eyeOff" : "eye", 18);
+    }
+    return;
+  }
+
   const el = e.target.closest("[data-act]");
   if (!el) return;
   Sound.click();
@@ -1174,26 +1454,39 @@ document.addEventListener("click", e => {
 
   switch (act) {
     case "go":
+      if (window.innerWidth <= 900) closeMobileSidebar();
       location.hash = el.dataset.to;
       break;
     case "brand-click": {
-      if (ui.sidebarCollapsed) {
-        expandSidebar();
-      } else {
+      if (window.innerWidth <= 900) {
+        closeMobileSidebar();
         location.hash = "#/dashboard";
+      } else {
+        if (ui.sidebarCollapsed) {
+          expandSidebar();
+        } else {
+          location.hash = "#/dashboard";
+        }
       }
       break;
     }
+    case "close-sidebar-mobile": {
+      closeMobileSidebar();
+      break;
+    }
     case "close-sidebar-now": {
-      collapseSidebar();
+      if (window.innerWidth <= 900) {
+        closeMobileSidebar();
+      } else {
+        collapseSidebar();
+      }
       break;
     }
     case "open-sidebar":
     case "menu": {
       if (window.innerWidth <= 900) {
-        ui.menu = !ui.menu;
-        const sidebar = document.getElementById("sidebar");
-        if (sidebar) sidebar.classList.toggle("open", ui.menu);
+        if (ui.menu) closeMobileSidebar();
+        else openMobileSidebar();
       } else {
         expandSidebar();
       }
@@ -1201,9 +1494,8 @@ document.addEventListener("click", e => {
     }
     case "toggle-sidebar": {
       if (window.innerWidth <= 900) {
-        ui.menu = !ui.menu;
-        const sidebar = document.getElementById("sidebar");
-        if (sidebar) sidebar.classList.toggle("open", ui.menu);
+        if (ui.menu) closeMobileSidebar();
+        else openMobileSidebar();
       } else {
         if (ui.sidebarCollapsed) {
           expandSidebar();
@@ -1241,9 +1533,10 @@ document.addEventListener("click", e => {
       render();
       break;
     case "logout":
-      S.session.in = false;
-      save();
+      await Store.logout();
+      S = Store.state;
       render();
+      toast("Tizimdan chiqildi");
       break;
     case "close-modal":
       closeModal();
@@ -1260,6 +1553,7 @@ document.addEventListener("click", e => {
       render();
       break;
     case "open-group":
+      if (window.innerWidth <= 900) closeMobileSidebar();
       ui.attDate = null;
       ui.groupTab = "att";
       location.hash = "#/group/" + id;
@@ -1269,40 +1563,71 @@ document.addEventListener("click", e => {
       render();
       break;
     case "open-chat":
+      if (window.innerWidth <= 900) closeMobileSidebar();
       ui.chat = id;
       location.hash = "#/chat";
       render();
+      scrollChatToBottom();
       break;
+    case "quick-prompt": {
+      const promptText = el.dataset.p;
+      const chatInput = document.getElementById("chat-input");
+      if (chatInput) {
+        chatInput.value = promptText;
+        chatInput.focus();
+      }
+      break;
+    }
+    case "clear-chat": {
+      const cid = el.dataset.id || ui.chat;
+      if (confirm("Ushbu suhbat tarixini tozalashni xohlaysizmi?")) {
+        if (!S.chats) S.chats = {};
+        S.chats[cid] = [];
+        save();
+        render();
+        toast("Suhbat tozalandi");
+      }
+      break;
+    }
+    case "copy-code": {
+      const code = el.dataset.code || (el.closest(".chat-code-block") ? el.closest(".chat-code-block").querySelector("pre code").innerText : "");
+      if (code && navigator.clipboard) {
+        navigator.clipboard.writeText(code);
+        const orig = el.textContent;
+        el.textContent = "Nusxalandi! ✓";
+        setTimeout(() => { el.textContent = orig; }, 2000);
+      }
+      break;
+    }
     case "mark": {
-      const key = el.dataset.gid + "|" + (ui.attDate || todayISO());
-      S.attendance[key] = S.attendance[key] || {};
-      S.attendance[key][el.dataset.sid] = el.dataset.v;
-      save();
+      const gid = el.dataset.gid;
+      const sid = el.dataset.sid;
+      const v = el.dataset.v;
+      const date = ui.attDate || todayISO();
+      try {
+        await Store.recordAttendance(gid, date, { [sid]: v });
+      } catch (err) {
+        console.error("Davomat xatosi:", err);
+      }
       render();
       break;
     }
     case "set-att-grade": {
-      if (!S.grades) S.grades = {};
       const gid = el.dataset.gid;
       const sid = el.dataset.sid;
       const date = el.dataset.date || (ui.attDate || todayISO());
       const score = parseInt(el.dataset.score, 10);
       const gradeKey = `${gid}|${sid}|${date}`;
-      const student = S.students.find(s => s.id === sid);
+      const student = S.students.find(s => String(s.id) === String(sid));
 
-      if (S.grades[gradeKey] && S.grades[gradeKey].score === score) {
-        delete S.grades[gradeKey];
+      if (S.grades && S.grades[gradeKey] && S.grades[gradeKey].score === score) {
+        await Store.recordGrade(gid, sid, date, 0, gradeKey, "");
         toast(`${student ? student.name : "O'quvchi"}: baho olib tashlandi`);
       } else {
-        S.grades[gradeKey] = { score: score, date: date };
-        const attKey = gid + "|" + date;
-        if (!S.attendance[attKey]) S.attendance[attKey] = {};
-        if (!S.attendance[attKey][sid] || S.attendance[attKey][sid] === "kelmadi") {
-          S.attendance[attKey][sid] = "keldi";
-        }
+        await Store.recordGrade(gid, sid, date, score, gradeKey, "");
+        await Store.recordAttendance(gid, date, { [sid]: "keldi" });
         toast(`${student ? student.name : "O'quvchi"}: ${score} baho qo'yildi`, "ok");
       }
-      save();
       render();
       break;
     }
@@ -1311,7 +1636,7 @@ document.addEventListener("click", e => {
       const sid = el.dataset.sid;
       const t = el.dataset.t;
       const tname = el.dataset.tname || `${t}-dars`;
-      const s = S.students.find(x => x.id === sid);
+      const s = S.students.find(x => String(x.id) === String(sid));
       const gradeKey = `${gid}|${sid}|t${t}`;
       const cur = S.grades && S.grades[gradeKey] ? S.grades[gradeKey].score : 0;
 
@@ -1339,29 +1664,27 @@ document.addEventListener("click", e => {
       break;
     }
     case "save-grade-val": {
-      if (!S.grades) S.grades = {};
       const key = el.dataset.key;
       const val = parseInt(el.dataset.val, 10);
-      if (val > 0) {
-        S.grades[key] = { score: val, date: todayISO() };
-        toast(`Baho saqlandi: ${val}`, "ok");
-      } else {
-        delete S.grades[key];
-        toast("Baho o'chirildi");
-      }
-      save();
+      const parts = key.split("|");
+      const gid = parts[0];
+      const sid = parts[1];
+      await Store.recordGrade(gid, sid, todayISO(), val, key, "");
       closeModal();
       render();
+      if (val > 0) toast(`Baho saqlandi: ${val}`, "ok");
+      else toast("Baho o'chirildi");
       break;
     }
     case "mark-all": {
-      const key = el.dataset.gid + "|" + (ui.attDate || todayISO());
-      S.attendance[key] = {};
-      studentsOf(el.dataset.gid).forEach(s => (S.attendance[key][s.id] = "keldi"));
-      save();
+      const gid = el.dataset.gid;
+      const date = ui.attDate || todayISO();
+      const records = {};
+      studentsOf(gid).forEach(s => (records[s.id] = "keldi"));
+      await Store.recordAttendance(gid, date, records);
       fireConfetti();
       render();
-      toast("Barchasi keldi deb belgilandi");
+      toast("Barchasi keldi deb belgilandi", "ok");
       break;
     }
     case "add-student":
@@ -1433,71 +1756,135 @@ document.addEventListener("input", e => {
   }
 });
 
-document.addEventListener("submit", e => {
+document.addEventListener("submit", async e => {
   const f = e.target;
   if (f.id === "login-form") {
     e.preventDefault();
     const d = Object.fromEntries(new FormData(f));
-    if (d.login === S.teacher.login && d.pw === S.teacher.password) {
+    const btn = f.querySelector("button[type=submit]");
+    const errBox = document.getElementById("login-error");
+    if (errBox) errBox.classList.add("hidden");
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Kirilmoqda...";
+    }
+    try {
+      const res = await API.login(d.login, d.pw);
+      if (!S.session) S.session = {};
       S.session.in = true;
-      save();
+      S.session.user = res.user;
+      await Store.syncFromServer();
+      S = Store.state;
+      if (!S.session) S.session = {};
+      S.session.in = true;
+      currentViewKey = null;
       location.hash = "#/dashboard";
-      fireConfetti();
       render();
-    } else {
-      toast("Login yoki parol noto'g'ri", "bad");
+      fireConfetti();
+      toast("Xush kelibsiz, " + (res.user && res.user.fullname ? res.user.fullname : "Ustoz") + "!", "ok");
+    } catch (err) {
+      if (errBox) {
+        errBox.textContent = err.message || "Telefon raqam yoki parol noto'g'ri";
+        errBox.classList.remove("hidden");
+      }
+      toast(err.message || "Telefon raqam yoki parol noto'g'ri", "bad");
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Kirish";
+      }
     }
   }
 
   if (f.id === "profile-form") {
     e.preventDefault();
-    Object.assign(S.teacher, Object.fromEntries(new FormData(f)));
-    save();
-    render();
-    toast("Saqlandi");
+    const d = Object.fromEntries(new FormData(f));
+    try {
+      await Store.saveProfile(d);
+      S = Store.state;
+      render();
+      toast("Profil saqlandi", "ok");
+    } catch (err) {
+      toast(err.message || "Profilni saqlashda xatolik", "bad");
+    }
   }
 
   if (f.id === "pass-form") {
     e.preventDefault();
     const d = Object.fromEntries(new FormData(f));
-    if (d.old !== S.teacher.password) {
-      toast("Joriy parol noto'g'ri", "bad");
+    if (!d.pw || d.pw.length < 6) {
+      toast("Yangi parol kamida 6 ta belgidan iborat bo'lishi kerak", "bad");
       return;
     }
-    S.teacher.login = d.login.trim();
-    S.teacher.password = d.pw;
-    save();
-    f.reset();
-    toast("Parol yangilandi");
+    try {
+      await API.updatePassword(d.old, d.pw);
+      f.reset();
+      toast("Parol muvaffaqiyatli yangilandi", "ok");
+    } catch (err) {
+      toast(err.message || "Parolni yangilashda xatolik", "bad");
+    }
   }
 
   if (f.id === "chat-form") {
     e.preventDefault();
-    const text = new FormData(f).get("text").trim();
+    const input = f.querySelector("input[name='text']");
+    const text = input ? input.value.trim() : "";
     if (!text) return;
+    input.value = "";
 
-    S.chats[ui.chat] = S.chats[ui.chat] || [];
-    S.chats[ui.chat].push({
+    S.chats = S.chats || {};
+    const chatId = ui.chat || "ai";
+    S.chats[chatId] = S.chats[chatId] || [];
+
+    const myMsg = {
       from: "me",
+      sender: (S.teacher && S.teacher.name) || "Ustoz",
       text,
       t: Date.now()
-    });
+    };
+    S.chats[chatId].push(myMsg);
     save();
     render();
+    scrollChatToBottom();
 
-    ui.isTyping = true;
-    render();
-    setTimeout(() => {
-      ui.isTyping = false;
-      const replies = ["Tushundim, ustoz!", "Rahmat!", "Vazifani topshiraman."];
-      S.chats[ui.chat].push({
-        from: "them",
-        text: replies[Math.floor(Math.random() * replies.length)],
-        t: Date.now()
-      });
-      save();
+    try { API.sendChatMessage(chatId, myMsg); } catch(e) {}
+
+    const isAiChat = chatId === "ai";
+    const autoReplyOn = ui.aiAutoReply !== false;
+
+    if (isAiChat || autoReplyOn) {
+      ui.isTyping = true;
       render();
-    }, 1100);
+      scrollChatToBottom();
+
+      try {
+        const reply = await requestAIResponse(text, chatId);
+        ui.isTyping = false;
+        const aiMsg = {
+          from: "ai",
+          sender: "Topex AI",
+          text: reply,
+          t: Date.now()
+        };
+        S.chats[chatId].push(aiMsg);
+        save();
+        try { API.sendChatMessage(chatId, aiMsg); } catch(e) {}
+        if (Sound && Sound.success) Sound.success();
+        render();
+        scrollChatToBottom();
+      } catch (err) {
+        ui.isTyping = false;
+        render();
+        toast("AI javobida xatolik: " + err.message, "bad");
+      }
+    }
+  }
+});
+
+document.addEventListener("change", e => {
+  if (e.target && e.target.id === "ai-auto-toggle") {
+    ui.aiAutoReply = e.target.checked;
+    toast(ui.aiAutoReply ? "AI avto-javob yoqildi ✨" : "AI avto-javob o'chirildi");
   }
 });
 
@@ -1507,51 +1894,51 @@ function groupForm() {
     <div class="field"><label>Guruh nomi</label><input name="name" required placeholder="FN-25"></div>
     <div class="field"><label>Kurs</label><input name="course" required placeholder="Frontend"></div>
     <div class="form-grid">
-      <div class="field"><label>Xona</label><input name="room" value="304-xona" required></div>
-      <div class="field"><label>Vaqt</label><input name="time" value="09:00" required></div>
+      <div class="field"><label>Xona</label><input name="room" value="304-laboratoriya" required></div>
+      <div class="field"><label>Vaqt</label><input name="time" value="09:00 - 10:30" required></div>
     </div>
     <div class="field"><label>Kunlar (1=Du, 3=Chor, 5=Ju)</label><input name="days" value="1,3,5" required></div>
-  `, d => {
+  `, async d => {
     const days = d.days.split(",").map(x => parseInt(x.trim(), 10)).filter(x => x >= 1 && x <= 7);
-    S.groups.push({
-      id: Store.uid("g"),
+    await Store.createGroup({
       name: d.name,
       course: d.course,
       room: d.room,
       time: d.time,
       days: days.length ? days : [1, 3, 5]
     });
-    save();
     closeModal();
     fireConfetti();
     render();
-    toast("Guruh qo'shildi");
+    toast("Guruh qo'shildi", "ok");
   });
 }
 
 function studentForm(s, gid) {
   const v = s || { name: "", phone: "+998 90 ", parentPhone: "+998 93 ", balance: 0, groupId: gid || (S.groups[0] || {}).id };
   modal(s ? "Tahrirlash" : "Yangi o'quvchi", `
-    <div class="field"><label>F.I.Sh.</label><input name="name" required value="${esc(v.name)}"></div>
+    <div class="field"><label>F.I.Sh.</label><input name="name" required value="${esc(v.name || v.fullname || '')}"></div>
     <div class="form-grid">
       <div class="field">
         <label>Guruh</label>
         <select name="groupId">
-          ${S.groups.map(g => `<option value="${g.id}" ${g.id === v.groupId ? "selected" : ""}>${esc(g.name)}</option>`).join("")}
+          ${S.groups.map(g => `<option value="${g.id}" ${String(g.id) === String(v.groupId) ? "selected" : ""}>${esc(g.name)}</option>`).join("")}
         </select>
       </div>
-      <div class="field"><label>Telefon</label><input name="phone" value="${esc(v.phone)}"></div>
-      <div class="field"><label>Ota-onasi</label><input name="parentPhone" value="${esc(v.parentPhone)}"></div>
-      <div class="field"><label>Balans</label><input type="number" name="balance" value="${esc(v.balance)}"></div>
+      <div class="field"><label>Telefon</label><input name="phone" value="${esc(v.phone || '')}"></div>
+      <div class="field"><label>Ota-onasi</label><input name="parentPhone" value="${esc(v.parentPhone || v.father || '')}"></div>
+      <div class="field"><label>Balans</label><input type="number" name="balance" value="${esc(v.balance || 0)}"></div>
     </div>
-  `, d => {
+  `, async d => {
     d.balance = Number(d.balance) || 0;
-    if (s) Object.assign(s, d);
-    else S.students.push(Object.assign({ id: Store.uid("s") }, d));
-    save();
+    if (s) {
+      await Store.updateStudent(s.id, d);
+    } else {
+      await Store.createStudent(d);
+    }
     closeModal();
     render();
-    toast("Saqlandi");
+    toast("O'quvchi saqlandi", "ok");
   });
 }
 
@@ -1566,17 +1953,16 @@ function hwForm() {
     <div class="field"><label>Sarlavha</label><input name="title" required></div>
     <div class="field"><label>Tavsif</label><textarea name="desc" rows="3" required></textarea></div>
     <div class="field"><label>Muddati</label><input type="date" name="due" value="${iso(due)}" required></div>
-  `, d => {
-    S.homework.push({ id: Store.uid("h"), groupId: d.groupId, title: d.title, desc: d.desc, due: d.due, done: {} });
-    save();
+  `, async d => {
+    await Store.createHomework({ groupId: d.groupId, title: d.title, desc: d.desc, due: d.due, done: {} });
     closeModal();
     render();
-    toast("Vazifa berildi");
+    toast("Vazifa berildi", "ok");
   });
 }
 
 function checkHw(id) {
-  const h = S.homework.find(x => x.id === id);
+  const h = S.homework.find(x => String(x.id) === String(id));
   if (!h) return;
   const list = studentsOf(h.groupId);
 
@@ -1584,24 +1970,25 @@ function checkHw(id) {
     <div style="max-height:50vh;overflow-y:auto">
       ${list.map(s => `
         <label class="switch">
-          <span>${esc(s.name)}</span>
-          <input type="checkbox" name="${s.id}" ${h.done[s.id] ? "checked" : ""}>
+          <span>${esc(s.name || s.fullname)}</span>
+          <input type="checkbox" name="${s.id}" ${h.done && h.done[s.id] ? "checked" : ""}>
         </label>
       `).join("")}
     </div>
-  `, d => {
-    h.done = {};
-    Object.keys(d).forEach(k => (h.done[k] = true));
-    save();
+  `, async d => {
+    for (const s of list) {
+      const isDone = !!d[s.id];
+      await Store.setHomeworkDone(h.id, s.id, isDone);
+    }
     closeModal();
     render();
-    toast("Saqlandi");
+    toast("Vazifalar saqlandi", "ok");
   });
 }
 
 function exportCSV() {
   const head = ["F.I.Sh.", "Guruh", "Telefon", "Ota-onasi", "Balans"];
-  const rows = S.students.map(s => [s.name, (groupById(s.groupId) || {}).name || "", s.phone, s.parentPhone, s.balance]);
+  const rows = S.students.map(s => [s.name || s.fullname, (groupById(s.groupId) || {}).name || "", s.phone, s.parentPhone || s.father, s.balance]);
   const csv = "\uFEFF" + [head].concat(rows).map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(",")).join("\n");
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -1621,5 +2008,24 @@ function hidePreloader() {
   }, 450);
 }
 
-render();
-hidePreloader();
+window.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    if (ui.menu) closeMobileSidebar();
+    closeModal();
+  }
+});
+
+async function initApp() {
+  if (API.isLoggedIn()) {
+    try {
+      await Store.syncFromServer();
+      S = Store.state;
+    } catch (e) {
+      console.warn("Init sync failed:", e);
+    }
+  }
+  render();
+  hidePreloader();
+}
+
+initApp();
