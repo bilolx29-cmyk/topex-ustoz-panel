@@ -1777,6 +1777,9 @@ document.addEventListener("submit", async e => {
       S = Store.state;
       if (!S.session) S.session = {};
       S.session.in = true;
+      if (!S.teacher) {
+        S.teacher = (res && res.user) ? res.user : { name: "Jovohir", fullname: "Jovohir", phone: "+998 77 974 10 26" };
+      }
       currentViewKey = null;
       location.hash = "#/dashboard";
       render();
