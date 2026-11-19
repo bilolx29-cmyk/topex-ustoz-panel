@@ -101,15 +101,30 @@ const API = {
 
   // 1. Tizimga kirish (Login)
   async login(phone, password) {
-    const res = await this.request("/api/login", {
-      method: "POST",
-      body: JSON.stringify({ phone, password })
-    });
+    try {
+      const res = await this.request("/api/login", {
+        method: "POST",
+        body: JSON.stringify({ phone, password })
+      });
 
-    if (res && res.token) {
-      this.setSession(res.token, res.user);
+      if (res && res.token) {
+        this.setSession(res.token, res.user);
+      }
+      return res;
+    } catch (err) {
+      // Server mavjud bo'lmasa yoki offline fallback: TopexDB orqali kirish
+      if (typeof TopexDB !== "undefined" && TopexDB.isLocalDevelopment()) {
+        try {
+          const user = TopexDB.loginTeacher(phone, password);
+          const fakeToken = "t_local_" + Date.now();
+          this.setSession(fakeToken, user);
+          return { ok: true, token: fakeToken, user };
+        } catch (dbErr) {
+          throw new Error(dbErr.message || err.message);
+        }
+      }
+      throw err;
     }
-    return res;
   },
 
   // 2. Tizimdan chiqish (Logout)
@@ -125,17 +140,50 @@ const API = {
 
   // 3. Joriy sessiyani serverdan tekshirish
   async getMe() {
-    return await this.request("/api/me");
+    try {
+      return await this.request("/api/me");
+    } catch (e) {
+      const u = this.getUser();
+      if (u) return { ok: true, user: u };
+      throw e;
+    }
   },
 
   // 4. Ustozning real ma'lumotlarini serverdan yuklab olish
   async getTeacherData() {
-    const data = await this.request("/api/teacher/data");
     try {
-      // Offline fallback uchun oxirgi ma'lumotlarni keshlab qo'yamiz
-      localStorage.setItem(this.cachedDataKey, JSON.stringify(data));
-    } catch (e) {}
-    return data;
+      const data = await this.request("/api/teacher/data");
+      try {
+        localStorage.setItem(this.cachedDataKey, JSON.stringify(data));
+      } catch (e) {}
+      return data;
+    } catch (err) {
+      // Fallback: TopexDB dan faqat ushbu o'qituvchiga tegishli ma'lumotlarni olish
+      if (typeof TopexDB !== "undefined") {
+        const u = this.getUser();
+        const allTeachers = TopexDB.getTeachers();
+        const activeT = allTeachers.find(t => t.id === (u && u.id)) || u;
+        const allGroups = TopexDB.getGroups();
+        // Ustozga tegishli guruhlar (agar teacherId bo'lsa yoki bo'sh bo'lsa)
+        const myGroups = activeT ? allGroups.filter(g => !g.teacherId || g.teacherId === activeT.id) : [];
+        const myGroupIds = myGroups.map(g => g.id);
+        const allStudents = TopexDB.getStudents();
+        const myStudents = allStudents.filter(s => myGroupIds.includes(s.groupId));
+
+        return {
+          ok: true,
+          teacher: activeT,
+          groups: myGroups,
+          students: myStudents,
+          attendance: {},
+          grades: {},
+          homework: [],
+          announcements: [],
+          chats: {}
+        };
+      }
+      throw err;
+    }
   },
 
   // Keshdagi ma'lumotlarni olish (tarmoq uzilganda)

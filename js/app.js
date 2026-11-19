@@ -64,7 +64,7 @@ function icon(name, size = 18, cls = "") {
     download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
     send: '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
     arrowLeft: '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
-    eye: '<path d="2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+    eye: '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
     eyeOff: '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><line x1="2" x2="22" y1="2" y2="22"/>',
     x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
     chevronLeft: '<polyline points="15 18 9 12 15 6"/>',
@@ -78,7 +78,7 @@ function icon(name, size = 18, cls = "") {
     user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
     menu: '<line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>'
   };
-  return `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icons[name] || icons.dashboard}</svg>`;
+  return `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${icons[name] || icons.dashboard}</svg>`;
 }
 
 /* Ovoz effektlari */
@@ -275,49 +275,105 @@ function pageDashboard() {
   });
   const st = attStats();
   const announcements = S.announcements || [];
+  const teacherName = (S.teacher && (S.teacher.name || S.teacher.fullname)) || "Azamat Qodirov";
+  const soundEnabled = !S.settings || S.settings.soundEnabled !== false;
+  const isDark = S.session && S.session.theme === "dark";
+  const salary = (S.teacher && S.teacher.salary) || 6500000;
 
   return `
-    <!-- 4 ta Asosiy KPI Kartasi -->
-    <div class="grid c4" style="margin-bottom:20px">
-      <div class="card stat-card" style="cursor:pointer" data-act="go" data-to="#/students">
-        <div>
+    <!-- Stitch Mobile Title & Greeting (Mobile only) -->
+    <div class="mobile-greeting-area">
+      <div class="mobile-greeting-texts">
+        <h1 class="mobile-greeting-title">Asosiy</h1>
+        <p class="mobile-greeting-sub">Xush kelibsiz, ${esc(teacherName)}</p>
+      </div>
+    </div>
+
+    <!-- Stitch Mobile Quick Status Toolbar (Mobile only) -->
+    <div class="mobile-quick-toolbar">
+      <div class="mobile-live-status-pill">
+        <span class="status-pulse-dot"></span>
+        <span class="live-clock-text">--:--</span> • Faol seans
+      </div>
+      <div class="mobile-quick-btns">
+        <button type="button" class="mobile-quick-action-btn" data-act="sound" title="Ovozli bildirishnomalar">
+          ${icon(soundEnabled ? "volume" : "volumeX", 16)}
+        </button>
+        <button type="button" class="mobile-quick-action-btn" data-act="theme" title="Tungi/kunduzgi rejim">
+          ${icon(isDark ? "sun" : "moon", 16)}
+        </button>
+      </div>
+    </div>
+
+    <!-- 4 ta Asosiy KPI Kartasi (Mobile: 2x2 grid, Desktop: 4-col) -->
+    <div class="grid c4" style="margin-bottom:24px">
+      <!-- 1. O'quvchilar -->
+      <div class="stat-card" style="cursor:pointer" data-act="go" data-to="#/students">
+        <div class="stat-card-left">
           <div class="stat-label">O'quvchilar</div>
-          <div class="stat-value">${S.students.length}</div>
+          <div class="stat-value">${S.students.length} ta</div>
+          <div class="stat-subtext">Talabalar tarkibi</div>
         </div>
-        <div class="stat-icon">${icon("students", 20)}</div>
+        <div class="stat-card-right">
+          <div class="stat-icon-wrap tone-indigo">
+            ${icon("students", 24)}
+          </div>
+        </div>
       </div>
 
-      <div class="card stat-card emerald" style="cursor:pointer" data-act="go" data-to="#/stats">
-        <div>
+      <!-- 2. Davomat -->
+      <div class="stat-card" style="cursor:pointer" data-act="go" data-to="#/stats">
+        <div class="stat-card-left">
           <div class="stat-label">Davomat</div>
           <div class="stat-value">${st.pct}%</div>
+          <div class="stat-subtext">Faol davomat ko'rsatkichi</div>
         </div>
-        <div class="stat-icon emerald">${icon("check", 20)}</div>
+        <div class="stat-card-right">
+          <div class="stat-icon-wrap tone-green">
+            ${icon("check", 24)}
+          </div>
+        </div>
       </div>
 
-      <div class="card stat-card amber" style="cursor:pointer" data-act="go" data-to="#/groups">
-        <div>
+      <!-- 3. Guruhlar -->
+      <div class="stat-card" style="cursor:pointer" data-act="go" data-to="#/groups">
+        <div class="stat-card-left">
           <div class="stat-label">Guruhlar</div>
-          <div class="stat-value">${S.groups.length}</div>
+          <div class="stat-value">${S.groups.length} ta</div>
+          <div class="stat-subtext">Biriktirilgan guruhlar</div>
         </div>
-        <div class="stat-icon amber">${icon("schedule", 20)}</div>
+        <div class="stat-card-right">
+          <div class="stat-icon-wrap tone-amber">
+            ${icon("schedule", 24)}
+          </div>
+        </div>
       </div>
 
-      <div class="card stat-card rose">
-        <div>
+      <!-- 4. Oylik (Stitch privacy pattern mask) -->
+      <div class="stat-card">
+        <div class="stat-card-left">
           <div class="stat-label" style="display:flex;align-items:center;gap:6px">
             Oylik
             <button class="btn ghost sm" data-act="toggle-salary" style="padding:2px 5px" title="${ui.salaryShown ? "Berkitish" : "Ko'rsatish"}">
               ${icon(ui.salaryShown ? "eyeOff" : "eye", 13)}
             </button>
           </div>
-          <div class="stat-value" style="font-size:22px">
-            <span class="tg-spoiler ${ui.salaryShown ? "revealed" : ""}" data-act="toggle-salary" title="${ui.salaryShown ? "Berkitish" : "Ko'rish uchun bosing"}">
-              <span class="tg-spoiler-text">${money(S.teacher.salary)}</span>
-            </span>
+          <div class="stat-value">
+            ${ui.salaryShown ? `
+              <span class="salary-revealed-text" data-act="toggle-salary">${money(salary)}</span>
+            ` : `
+              <div class="privacy-pattern-box" data-act="toggle-salary" title="Ko'rish uchun bosing">
+                <span class="privacy-dots">• • • •</span>
+              </div>
+            `}
+          </div>
+          <div class="stat-subtext">Kafedra bo'yicha to'liq</div>
+        </div>
+        <div class="stat-card-right">
+          <div class="stat-icon-wrap tone-red">
+            ${icon("profile", 24)}
           </div>
         </div>
-        <div class="stat-icon rose">${icon("profile", 20)}</div>
       </div>
     </div>
 
@@ -351,9 +407,15 @@ function pageDashboard() {
             }).join("")}
           </div>
         ` : `
-          <div style="text-align:center;padding:36px 16px;color:var(--muted)">
-            <p style="font-weight:600;margin-bottom:10px">Bugun rejalashtirilgan darslar yo'q</p>
-            <a class="btn ghost sm" data-act="go" data-to="#/schedule">Dars jadvalini ko'rish →</a>
+          <div class="stitch-empty-schedule">
+            <div class="stitch-empty-icon-circle">
+              ${icon("schedule", 26)}
+            </div>
+            <p class="stitch-empty-title">Bugun rejalashtirilgan darslar yo'q</p>
+            <button type="button" class="stitch-empty-btn" data-act="go" data-to="#/schedule">
+              <span>Dars jadvalini ko'rish</span>
+              <span>→</span>
+            </button>
           </div>
         `}
       </div>
@@ -381,7 +443,14 @@ function pageDashboard() {
               </div>
             </div>
           `).join("")}
-          ${announcements.length ? "" : `<div class="empty">Yangi e'lonlar yo'q</div>`}
+          ${announcements.length ? "" : `
+            <div class="stitch-empty-announcements">
+              <div class="stitch-empty-icon-circle">
+                ${icon("chat", 26)}
+              </div>
+              <p class="stitch-empty-title">Yangi e'lonlar yo'q</p>
+            </div>
+          `}
         </div>
       </div>
     </div>
@@ -482,6 +551,10 @@ function pageGroup(id) {
   let tabContent = "";
 
   if (tab === "att") {
+    const presentCount = list.filter(s => rec[s.id] === "keldi").length;
+    const absentCount = list.filter(s => rec[s.id] === "kelmadi").length;
+    const excusedCount = list.filter(s => rec[s.id] === "sababli").length;
+
     const rows = list.map((s, i) => {
       const cur = rec[s.id] || "";
       const gradeKey = `${g.id}|${s.id}|${date}`;
@@ -510,18 +583,68 @@ function pageGroup(id) {
     }).join("");
 
     tabContent = `
+      <!-- Stitch Quick Summary Badges (Davomat va baholash) -->
+      <div class="att-summary-pills">
+        <span class="att-pill total">Jami: <b>${list.length}</b></span>
+        <span class="att-pill present">✓ Bor: <b>${presentCount}</b></span>
+        <span class="att-pill excused">⏱ Sababli: <b>${excusedCount}</b></span>
+        <span class="att-pill absent">✕ Yo'q: <b>${absentCount}</b></span>
+      </div>
+
       <div class="row-head">
         <div class="toolbar">
           <input type="date" class="search" id="att-date" value="${date}">
-          <button class="btn success sm" data-act="mark-all" data-gid="${g.id}">${icon("check", 14)} Hammasi keldi</button>
+          <button class="btn success sm" data-act="mark-all" data-gid="${g.id}">${icon("check", 14)} Barchasi 'Bor'</button>
         </div>
         <button class="btn sm" data-act="add-student" data-gid="${g.id}">${icon("plus", 14)} O'quvchi</button>
       </div>
-      <div class="card table-wrap">
+
+      <!-- Desktop Table View -->
+      <div class="card table-wrap desktop-only">
         <table>
           <thead><tr><th>№</th><th>F.I.Sh.</th><th>Telefon</th><th>Davomat</th><th>Baho (1–5)</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
+      </div>
+
+      <!-- Mobile Touch Attendance Cards (Stitch) -->
+      <div class="att-mobile-cards">
+        ${list.map(s => {
+          const cur = rec[s.id] || "";
+          const gradeKey = `${g.id}|${s.id}|${date}`;
+          const curGrade = S.grades && S.grades[gradeKey] ? S.grades[gradeKey].score : 0;
+          return `
+            <div class="card" style="padding:14px;border-radius:16px;margin-bottom:10px">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                <div style="display:flex;align-items:center;gap:10px;min-width:0;cursor:pointer" data-act="open-student" data-id="${s.id}">
+                  <div class="avatar sm" style="background:${esc(s.avatarColor || g.color || '#6366f1')}">${initials(s.name)}</div>
+                  <div style="min-width:0">
+                    <div style="font-weight:700;font-size:13.5px;color:var(--text)" class="truncate">${esc(s.name)}</div>
+                    <div style="font-size:11px;color:var(--muted)">${esc(s.phone || "#" + s.id)}</div>
+                  </div>
+                </div>
+                ${cur ? `<span class="badge ${cur === 'keldi' ? 'ok' : (cur === 'sababli' ? 'warn' : 'bad')}">${cur === 'keldi' ? 'Bor' : (cur === 'sababli' ? 'Sababli' : 'Yo\'q')}</span>` : ''}
+              </div>
+
+              <!-- 3 Attendance Buttons -->
+              <div class="att" style="margin-top:10px">
+                <button type="button" class="keldi ${cur === "keldi" ? "on" : ""}" data-act="mark" data-sid="${s.id}" data-gid="${g.id}" data-v="keldi">✓ Bor</button>
+                <button type="button" class="sababli ${cur === "sababli" ? "on" : ""}" data-act="mark" data-sid="${s.id}" data-gid="${g.id}" data-v="sababli">⏱ Sababli</button>
+                <button type="button" class="kelmadi ${cur === "kelmadi" ? "on" : ""}" data-act="mark" data-sid="${s.id}" data-gid="${g.id}" data-v="kelmadi">✕ Yo'q</button>
+              </div>
+
+              <!-- Grade Picker -->
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)">
+                <span style="font-size:11.5px;font-weight:600;color:var(--muted)">Baho:</span>
+                <div class="grade-picker">
+                  ${[1, 2, 3, 4, 5].map(n => `
+                    <button type="button" class="grade-btn g${n} ${curGrade === n ? "on" : ""}" data-act="set-att-grade" data-gid="${g.id}" data-sid="${s.id}" data-date="${date}" data-score="${n}">${n}</button>
+                  `).join("")}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("")}
       </div>
     `;
   }
@@ -622,24 +745,164 @@ function pageGroup(id) {
 }
 
 /* 3. O'quvchilar */
-function pageStudents() {
-  const q = ui.search.toLowerCase();
-  let list = S.students.filter(s => {
-    const matchGroup = !ui.groupFilter || s.groupId === ui.groupFilter;
-    const matchSearch = !q || s.name.toLowerCase().includes(q) || s.phone.includes(q);
-    return matchGroup && matchSearch;
+function getFilteredStudents() {
+  const q = (ui.search || "").trim().toLowerCase();
+  const filterGid = ui.groupFilter ? String(ui.groupFilter).trim() : "";
+  const qDigits = q.replace(/\D/g, "");
+
+  // Agar tanlangan guruh mavjud bo'lmasa, filtrni tozalash
+  if (filterGid && !(S.groups || []).some(g => String(g.id) === filterGid)) {
+    ui.groupFilter = "";
+  }
+  const effectiveGid = String(ui.groupFilter || "").trim();
+
+  return (S.students || []).filter(s => {
+    // 1. Guruh bo'yicha filtr
+    if (effectiveGid && String(s.groupId) !== effectiveGid) {
+      return false;
+    }
+
+    // 2. Qidiruv so'zi bo'yicha filtr
+    if (!q) return true;
+
+    const name = String(s.name || s.fullname || "").toLowerCase();
+    const phone = String(s.phone || "").toLowerCase();
+    const phoneDigits = phone.replace(/\D/g, "");
+    const parentPhone = String(s.parentPhone || "").toLowerCase();
+    const parentPhoneDigits = parentPhone.replace(/\D/g, "");
+    const parentName = String(s.parentName || s.father || "").toLowerCase();
+    const note = String(s.note || "").toLowerCase();
+
+    const g = groupById(s.groupId);
+    const groupName = g ? String(g.name || "").toLowerCase() : "";
+    const groupCourse = g ? String(g.course || "").toLowerCase() : "";
+
+    const matchName = name.includes(q);
+    const matchPhone = phone.includes(q) || (qDigits.length >= 2 && phoneDigits.includes(qDigits));
+    const matchParent = parentName.includes(q) || parentPhone.includes(q) || (qDigits.length >= 2 && parentPhoneDigits.includes(qDigits));
+    const matchGroup = groupName.includes(q) || groupCourse.includes(q);
+    const matchNote = note.includes(q);
+
+    return matchName || matchPhone || matchParent || matchGroup || matchNote;
   });
+}
+
+function renderStudentsRows(list) {
+  if (!list || !list.length) return "";
+  return list.map((s, i) => {
+    const g = groupById(s.groupId);
+    const avg = studentAvgGrade(s.id);
+    const avgNum = avg ? parseFloat(avg) : 0;
+    const name = s.name || s.fullname || "—";
+    const phone = s.phone || "—";
+    const parent = s.parentPhone || s.parentName || s.father || "—";
+    const groupName = g ? (g.name || "Guruh") : "—";
+    const balance = Number(s.balance) || 0;
+    const avatarBg = esc(s.avatarColor || (g && g.color) || '#6366f1');
+
+    return `
+      <tr class="click" data-act="open-student" data-id="${s.id}" style="cursor:pointer" title="O'quvchi ma'lumotlarini ko'rish">
+        <td>${i + 1}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="avatar sm" style="background:${avatarBg}">${initials(name)}</div>
+            <div>
+              <b>${esc(name)}</b>
+              ${s.note ? `<div style="font-size:11.5px;color:var(--muted)">${esc(s.note)}</div>` : ""}
+            </div>
+          </div>
+        </td>
+        <td><span class="badge ${g ? 'primary' : ''}">${esc(groupName)}</span></td>
+        <td>${avg ? `<span class="badge ${avgNum >= 4 ? 'ok' : (avgNum >= 3 ? 'warn' : 'bad')}">★ ${avg}</span>` : `<span style="color:var(--muted)">—</span>`}</td>
+        <td>${esc(phone)}</td>
+        <td>${esc(parent)}</td>
+        <td><b class="${balance < 0 ? 'bad' : 'ok'}">${money(balance)}</b></td>
+        <td style="text-align:right" onclick="event.stopPropagation()">
+          <div style="display:flex;justify-content:flex-end;gap:6px">
+            <button type="button" class="btn ghost sm" data-act="edit-student" data-id="${s.id}" title="Tahrirlash">
+              ${icon("edit", 13)} Tahrirlash
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function updateStudentsView() {
+  const tableBody = document.getElementById("students-table-body");
+  const countTitle = document.getElementById("students-count-title");
+  const emptyBox = document.getElementById("students-empty");
+  const searchWrap = document.querySelector(".search-wrap");
+
+  if (!tableBody) {
+    render();
+    return;
+  }
+
+  const list = getFilteredStudents();
+
+  if (countTitle) {
+    countTitle.textContent = `O'quvchilar (${list.length})`;
+  }
+
+  tableBody.innerHTML = renderStudentsRows(list);
+
+  if (emptyBox) {
+    if (list.length === 0) {
+      emptyBox.style.display = "";
+      emptyBox.classList.remove("hidden");
+    } else {
+      emptyBox.style.display = "none";
+      emptyBox.classList.add("hidden");
+    }
+  }
+
+  // Qidiruv maydonidagi tozalash (X) tugmasini dinamik yangilash
+  if (searchWrap) {
+    let btn = document.getElementById("clear-search-btn");
+    const iconSpan = searchWrap.querySelector("span");
+    if (ui.search) {
+      if (iconSpan) iconSpan.remove();
+      if (!btn) {
+        btn = document.createElement("button");
+        btn.type = "button";
+        btn.id = "clear-search-btn";
+        btn.setAttribute("data-act", "clear-search");
+        btn.setAttribute("title", "Tozalash");
+        btn.style.cssText = "position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;line-height:1;padding:2px";
+        btn.innerHTML = "&times;";
+        searchWrap.appendChild(btn);
+      }
+    } else {
+      if (btn) btn.remove();
+      if (!iconSpan) {
+        const span = document.createElement("span");
+        span.style.cssText = "position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted);display:flex;align-items:center";
+        span.innerHTML = icon("search", 13);
+        searchWrap.appendChild(span);
+      }
+    }
+  }
+}
+
+function pageStudents() {
+  const list = getFilteredStudents();
+  const groups = S.groups || [];
 
   return `
     <div class="row-head" style="margin-top:0">
-      <h2>O'quvchilar (${list.length})</h2>
+      <h2 id="students-count-title">O'quvchilar (${list.length})</h2>
       <div class="toolbar">
-        <input class="search" id="search" placeholder="Qidirish..." value="${esc(ui.search)}">
+        <div class="search-wrap" style="position:relative;display:inline-flex;align-items:center">
+          <input class="search" id="search" placeholder="Qidirish (ism, tel, guruh)..." value="${esc(ui.search)}" autocomplete="off" style="padding-right:28px">
+          ${ui.search ? `<button type="button" id="clear-search-btn" data-act="clear-search" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;line-height:1;padding:2px" title="Tozalash">&times;</button>` : `<span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted);display:flex;align-items:center">${icon("search", 13)}</span>`}
+        </div>
         <select class="search" id="group-filter">
-          <option value="">Barcha guruhlar</option>
-          ${S.groups.map(g => `<option value="${g.id}" ${ui.groupFilter === g.id ? "selected" : ""}>${esc(g.name)}</option>`).join("")}
+          <option value="">Barcha guruhlar (${groups.length})</option>
+          ${groups.map(g => `<option value="${g.id}" ${String(ui.groupFilter) === String(g.id) ? "selected" : ""}>${esc(g.name || g.course || "Guruh")}</option>`).join("")}
         </select>
-        <button class="btn sm" data-act="add-student">${icon("plus", 14)} Qo'shish</button>
+        <button class="btn sm" data-act="add-student" data-gid="${ui.groupFilter || ''}">${icon("plus", 14)} Qo'shish</button>
         <button class="btn ghost sm" data-act="export-csv">${icon("download", 14)} CSV</button>
       </div>
     </div>
@@ -647,29 +910,22 @@ function pageStudents() {
     <div class="card table-wrap">
       <table>
         <thead>
-          <tr><th>№</th><th>F.I.Sh.</th><th>Guruh</th><th>O'rtacha baho</th><th>Telefon</th><th>Ota-onasi</th><th>Balans</th></tr>
+          <tr>
+            <th>№</th>
+            <th>F.I.Sh.</th>
+            <th>Guruh</th>
+            <th>O'rtacha baho</th>
+            <th>Telefon</th>
+            <th>Ota-onasi</th>
+            <th>Balans</th>
+            <th style="text-align:right">Amallar</th>
+          </tr>
         </thead>
-        <tbody>
-          ${list.map((s, i) => {
-            const g = groupById(s.groupId);
-            const avg = studentAvgGrade(s.id);
-            const avgNum = avg ? parseFloat(avg) : 0;
-            return `
-              <tr>
-                <td>${i + 1}</td>
-                <td><b>${esc(s.name)}</b></td>
-                <td>${esc(g ? g.name : "—")}</td>
-                <td>${avg ? `<span class="badge ${avgNum >= 4 ? 'ok' : (avgNum >= 3 ? 'warn' : 'bad')}">★ ${avg}</span>` : `<span style="color:var(--muted)">—</span>`}</td>
-                <td>${esc(s.phone)}</td>
-                <td>${esc(s.parentPhone)}</td>
-                <td><b class="${s.balance < 0 ? 'bad' : 'ok'}">${money(s.balance)}</b></td>
-
-              </tr>
-            `;
-          }).join("")}
+        <tbody id="students-table-body">
+          ${renderStudentsRows(list)}
         </tbody>
       </table>
-      ${list.length ? "" : `<div class="empty">O'quvchilar topilmadi</div>`}
+      <div id="students-empty" class="${list.length ? 'hidden' : 'empty'}" style="${list.length ? 'display:none' : ''}">O'quvchilar topilmadi</div>
     </div>
   `;
 }
@@ -768,35 +1024,111 @@ function pageStats() {
 
 /* 6. Uy Vazifalari */
 function pageHomework() {
+  const hwFilter = ui.hwFilter || "all";
+  const today = todayISO();
+  let list = S.homework || [];
+
+  if (hwFilter === "unchecked") {
+    list = list.filter(h => {
+      const total = studentsOf(h.groupId).length;
+      const done = Object.values(h.done || {}).filter(Boolean).length;
+      return done < total;
+    });
+  } else if (hwFilter === "urgent") {
+    list = list.filter(h => {
+      const total = studentsOf(h.groupId).length;
+      const done = Object.values(h.done || {}).filter(Boolean).length;
+      return h.due <= today && done < total;
+    });
+  } else if (hwFilter === "completed") {
+    list = list.filter(h => {
+      const total = studentsOf(h.groupId).length;
+      const done = Object.values(h.done || {}).filter(Boolean).length;
+      return total > 0 && done >= total;
+    });
+  }
+
+  const allCount = (S.homework || []).length;
+  const uncheckedCount = (S.homework || []).filter(h => {
+    const total = studentsOf(h.groupId).length;
+    const done = Object.values(h.done || {}).filter(Boolean).length;
+    return done < total;
+  }).length;
+  const urgentCount = (S.homework || []).filter(h => {
+    const total = studentsOf(h.groupId).length;
+    const done = Object.values(h.done || {}).filter(Boolean).length;
+    return h.due <= today && done < total;
+  }).length;
+
   return `
     <div class="row-head" style="margin-top:0">
-      <h2>Uy vazifalari</h2>
+      <div>
+        <h2 style="font-size:22px;font-weight:900;letter-spacing:-0.02em">Uy vazifalari</h2>
+        <p style="font-size:12.5px;color:var(--muted);margin-top:2px">Jami ${allCount} ta faol topshiriq</p>
+      </div>
       <button class="btn sm" data-act="add-hw">${icon("plus", 14)} Yangi vazifa</button>
     </div>
 
+    <!-- Quick Filter Pills (Stitch) -->
+    <div class="hw-filters">
+      <button type="button" class="hw-filter-pill ${hwFilter === 'all' ? 'active' : ''}" data-act="filter-hw" data-filter="all">
+        Barchasi (${allCount})
+      </button>
+      <button type="button" class="hw-filter-pill ${hwFilter === 'unchecked' ? 'active' : ''}" data-act="filter-hw" data-filter="unchecked">
+        Tekshirilmagan ${uncheckedCount ? `<span class="badge bad-sm">${uncheckedCount}</span>` : ''}
+      </button>
+      <button type="button" class="hw-filter-pill ${hwFilter === 'urgent' ? 'active' : ''}" data-act="filter-hw" data-filter="urgent">
+        Muddat yaqin ${urgentCount ? `<span class="badge warn-sm">${urgentCount}</span>` : ''}
+      </button>
+      <button type="button" class="hw-filter-pill ${hwFilter === 'completed' ? 'active' : ''}" data-act="filter-hw" data-filter="completed">
+        Tugallangan
+      </button>
+    </div>
+
     <div class="grid c2">
-      ${S.homework.map(h => {
+      ${list.map(h => {
         const g = groupById(h.groupId);
         const total = studentsOf(h.groupId).length;
-        const done = Object.values(h.done).filter(Boolean).length;
-        const isLate = h.due < todayISO();
+        const done = Object.values(h.done || {}).filter(Boolean).length;
+        const isLate = h.due < today;
+        const pct = total ? Math.round((done / total) * 100) : 0;
+        const isCompleted = total > 0 && done >= total;
+        const statusClass = isLate ? "urgent" : (isCompleted ? "completed" : "normal");
 
         return `
-          <div class="card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-              <b>${esc(g ? g.name : "")}</b>
-              <span class="tag ${isLate ? 'bad' : 'ok'}">${h.due}</span>
+          <div class="hw-task-card ${statusClass}">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+              <span class="badge primary">${esc(g ? g.name : "Guruh")}</span>
+              <span class="badge ${isLate ? 'bad' : 'ok'}">${isLate ? 'Muddati o\'tgan' : h.due}</span>
             </div>
-            <h3 style="font-size:15px;margin-bottom:4px">${esc(h.title)}</h3>
-            <p style="color:var(--muted);font-size:13px;margin-bottom:12px">${esc(h.desc)}</p>
-            <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">Topshirdi: <b>${done}/${total}</b></div>
-            <div style="display:flex;gap:8px">
-              <button class="btn ghost sm" data-act="check-hw" data-id="${h.id}">${icon("check", 13)} Tekshirish</button>
-              <button class="btn danger sm" data-act="del-hw" data-id="${h.id}">${icon("trash", 13)}</button>
+            <div>
+              <h3 style="font-size:15px;font-weight:700;margin-bottom:4px;color:var(--text)">${esc(h.title)}</h3>
+              <p style="color:var(--muted);font-size:12.5px;line-height:1.45">${esc(h.desc)}</p>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-bottom:6px">
+                <span>Topshirdi: <b>${done}/${total}</b> o'quvchi</span>
+                <span style="font-weight:700;color:var(--primary)">${pct}%</span>
+              </div>
+              <div class="hw-progress-bar">
+                <div class="hw-progress-fill" style="width:${pct}%;background:${isCompleted ? 'var(--ok)' : 'var(--primary)'}"></div>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding-top:4px">
+              <button class="btn ghost sm" data-act="check-hw" data-id="${h.id}">${icon("check", 13)} Tekshirish ${total - done > 0 ? `(${total - done})` : ''}</button>
+              <button class="btn danger sm" data-act="del-hw" data-id="${h.id}" title="O'chirish">${icon("trash", 13)}</button>
             </div>
           </div>
         `;
       }).join("")}
+      ${list.length ? "" : `
+        <div class="card" style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--muted)">
+          <div class="stitch-empty-icon-circle" style="margin:0 auto 12px">
+            ${icon("homework", 26)}
+          </div>
+          <p style="font-weight:600">Topshiriqlar topilmadi</p>
+        </div>
+      `}
     </div>
   `;
 }
@@ -1063,7 +1395,13 @@ function pageChat() {
 
 /* 8. Profil */
 function pageProfile(tab = "personal") {
-  const t = S.teacher;
+  const t = S.teacher || {};
+  const teacherName = t.name || t.fullname || "Azamat Qodirov";
+  const teacherInitials = initials(teacherName);
+  const teacherPhone = t.phone || "+998 90 765 43 21";
+  const teacherRole = t.title || "Katta o'qituvchi / Dasturlash kafedrasi";
+  const teacherRoom = t.room || "3-bino, 302-auditoriya";
+
   const tabs = [
     ["personal", "Shaxsiy"],
     ["salary", "Oylik"],
@@ -1076,13 +1414,14 @@ function pageProfile(tab = "personal") {
   if (tab === "personal") {
     body = `
       <form id="profile-form" class="card" style="max-width:580px">
+        <div style="font-weight:700;font-size:15px;margin-bottom:14px;color:var(--text)">Shaxsiy ma'lumotlar</div>
         <div class="form-grid">
-          <div class="field"><label>Ism</label><input name="name" value="${esc(t.name)}" required></div>
-          <div class="field"><label>Lavozim</label><input name="title" value="${esc(t.title)}" required></div>
-          <div class="field"><label>Telefon</label><input name="phone" value="${esc(t.phone)}"></div>
-          <div class="field"><label>Xona</label><input name="room" value="${esc(t.room)}"></div>
+          <div class="field"><label>Ism</label><input name="name" value="${esc(teacherName)}" required></div>
+          <div class="field"><label>Lavozim</label><input name="title" value="${esc(teacherRole)}" required></div>
+          <div class="field"><label>Telefon</label><input name="phone" value="${esc(teacherPhone)}"></div>
+          <div class="field"><label>Xona</label><input name="room" value="${esc(teacherRoom)}"></div>
         </div>
-        <button class="btn sm" type="submit">Saqlash</button>
+        <button class="btn sm" type="submit" style="margin-top:14px">Saqlash</button>
       </form>
     `;
   }
@@ -1090,8 +1429,9 @@ function pageProfile(tab = "personal") {
   if (tab === "salary") {
     body = `
       <div class="card" style="max-width:480px">
-        <div style="font-size:24px;font-weight:800;color:var(--ok);margin-bottom:12px">${money(t.salary)}</div>
-        <div style="font-size:13px;color:var(--muted)">Oylik maosh to'liq hisoblangan</div>
+        <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px">Joriy oylik maosh</div>
+        <div style="font-size:26px;font-weight:900;color:var(--ok);margin-bottom:8px">${money(t.salary || 6500000)}</div>
+        <div style="font-size:13px;color:var(--muted)">Oylik maosh to'liq hisoblangan va tasdiqlangan</div>
       </div>
     `;
   }
@@ -1099,10 +1439,11 @@ function pageProfile(tab = "personal") {
   if (tab === "security") {
     body = `
       <form id="pass-form" class="card" style="max-width:480px">
-        <div class="field"><label>Login</label><input name="login" value="${esc(t.login)}" required></div>
+        <div style="font-weight:700;font-size:15px;margin-bottom:14px;color:var(--text)">Parolni yangilash</div>
+        <div class="field"><label>Login</label><input name="login" value="${esc(t.login || "ustoz")}" required></div>
         <div class="field"><label>Joriy parol</label><input type="password" name="old" required></div>
         <div class="field"><label>Yangi parol</label><input type="password" name="pw" minlength="4" required></div>
-        <button class="btn sm" type="submit">Yangilash</button>
+        <button class="btn sm" type="submit" style="margin-top:14px">Yangilash</button>
       </form>
     `;
   }
@@ -1110,8 +1451,9 @@ function pageProfile(tab = "personal") {
   if (tab === "settings") {
     body = `
       <div class="card" style="max-width:480px">
+        <div style="font-weight:700;font-size:15px;margin-bottom:14px;color:var(--text)">Ilova sozlamalari</div>
         <div class="switch">
-          <span>Tovush effektlari</span>
+          <span>Ovoz effektlari</span>
           <input type="checkbox" id="sound-toggle" ${S.settings && S.settings.soundEnabled ? 'checked' : ''}>
         </div>
       </div>
@@ -1119,6 +1461,26 @@ function pageProfile(tab = "personal") {
   }
 
   return `
+    <!-- Stitch Teacher Profile Overview Card -->
+    <div class="profile-overview-card">
+      <div style="display:flex;align-items:center;gap:16px;min-width:0">
+        <div class="profile-avatar-large">
+          <span>${teacherInitials}</span>
+          <span class="profile-verified-badge" title="Tasdiqlangan">✓</span>
+        </div>
+        <div style="min-width:0">
+          <div style="display:flex;align-items:center;gap:6px">
+            <h2 style="font-size:18px;font-weight:800;color:var(--text);letter-spacing:-0.01em" class="truncate">${esc(teacherName)}</h2>
+          </div>
+          <p style="font-size:12.5px;color:var(--muted);margin-top:2px">ID: #EDU-84291</p>
+          <div style="display:inline-flex;align-items:center;gap:6px;margin-top:4px">
+            <span class="status-pulse-dot"></span>
+            <span style="font-size:11.5px;font-weight:700;color:var(--ok)">Ustoz • Faol</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="tabs">
       ${tabs.map(([k, n]) => `<a class="${tab === k ? 'on' : ''}" data-act="go" data-to="#/profile/${k}">${n}</a>`).join("")}
     </div>
@@ -1139,22 +1501,32 @@ const NAV = [
 ];
 
 function loginPage() {
+  setTimeout(() => {
+    const phoneInput = document.getElementById("login-phone-input");
+    if (phoneInput && typeof TopexDB !== "undefined") {
+      TopexDB.bindPhoneInput(phoneInput);
+    }
+  }, 10);
+
   return `
     <div class="login-wrap">
       <form class="login-card" id="login-form">
         <div class="login-brand">
           <div class="logo-box">T</div>
-          <span>Topex Ustoz</span>
+          <div>
+            <div style="font-weight:800;font-size:17px;line-height:1.2">Topex Ustoz</div>
+            <div style="font-size:11.5px;color:var(--muted);font-weight:500">O'qituvchi Boshqaruv Tizimi</div>
+          </div>
         </div>
 
         <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">Tizimga kirish</h2>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:18px">O'qituvchi boshqaruv paneli</p>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:18px">O'qituvchi hisobingizga kiring</p>
 
         <div id="login-error" class="login-error hidden"></div>
 
         <div class="field">
           <label>Telefon raqam</label>
-          <input type="tel" name="login" placeholder="+998 90 044 80 04" required autofocus autocomplete="tel" inputmode="tel">
+          <input type="tel" name="phone" id="login-phone-input" placeholder="+998 90 123 45 67" maxlength="17" required autofocus autocomplete="tel" inputmode="numeric">
         </div>
         <div class="field">
           <label>Parol</label>
@@ -1168,9 +1540,11 @@ function loginPage() {
 
         <button class="btn" id="login-submit-btn" style="width:100%;margin-top:12px;height:42px" type="submit">Kirish</button>
         
-        <div class="login-info-box">
-          <svg style="display:inline;vertical-align:middle;margin-right:4px" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          Ustoz hisobi <b>TOPEX CRM</b> administratori tomonidan yaratiladi. Tizimga kirish uchun administrator bergan telefon raqam va paroldan foydalaning.
+        <!-- Test uchun tezkor kirish tugmasi -->
+        <div class="quick-demo-box">
+          <button type="button" class="btn ghost sm quick-login-btn" data-phone="+998 90 765 43 21" data-pw="1234" style="width:100%;justify-content:center;gap:6px">
+            ⚡ Ustoz hisobini to'ldirish (+998 90 765 43 21)
+          </button>
         </div>
       </form>
     </div>
@@ -1203,6 +1577,10 @@ function render() {
   if (!S.session.in) {
     currentViewKey = null;
     $app.innerHTML = loginPage();
+    if (typeof TopexDB !== "undefined" && !TopexDB.isLocalDevelopment()) {
+      const demoBox = $app.querySelector(".quick-demo-box");
+      if (demoBox) demoBox.remove();
+    }
     return;
   }
 
@@ -1226,83 +1604,35 @@ function render() {
 
   const activeNav = route === "group" ? "groups" : route;
 
-  $app.innerHTML = `
-    <div class="sidebar-backdrop ${ui.menu ? "open" : ""}" id="sidebar-backdrop" data-act="close-sidebar-mobile"></div>
-    <div class="layout ${ui.sidebarCollapsed ? "sidebar-collapsed" : ""}">
-      <aside class="sidebar ${ui.menu ? "open" : ""} ${ui.sidebarCollapsed ? "collapsed" : ""}" id="sidebar">
-        <div class="sidebar-timer-bar" id="sidebar-timer-bar" title="10 soniyada yopiladi"></div>
-        <div class="brand-wrapper">
-          <div class="brand" data-act="brand-click" title="${ui.sidebarCollapsed ? "Sidebarni ochish" : "Asosiy sahifaga o'tish"}">
-            <div class="logo-box">T</div>
-            <span class="brand-name">Topex</span>
-          </div>
-          <div class="sidebar-header-actions">
-            <button class="icon-btn sm sidebar-pin-btn ${ui.sidebarPinned ? "active" : ""}" data-act="toggle-sidebar-pin" title="${ui.sidebarPinned ? "Qadalgan (o'zi yopilmaydi). Avto-rejimga o'tish uchun bosing" : "Qadab qo'yish (avto-yopilmasligi uchun)"}">
-              ${icon("pin", 15)}
-            </button>
-            <button class="icon-btn sm sidebar-toggle-btn" data-act="close-sidebar-now" title="Sidebarni darhol yopish">
-              ${icon("chevronLeft", 16)}
-            </button>
-          </div>
-        </div>
-
-        <nav class="nav">
-          ${NAV.map(([k, ic, n]) => `
-            <a class="${activeNav === k ? "active" : ""}" data-act="go" data-to="#/${k}" title="${n}">
-              ${icon(ic, 18)}
-              <span>${n}</span>
-            </a>
-          `).join("")}
-        </nav>
-
-        <div class="bottom nav">
-          <a class="logout-btn" data-act="logout" title="Chiqish">
-            ${icon("logout", 18)}
-            <span>Chiqish</span>
-          </a>
-        </div>
-      </aside>
-
-      <main class="main">
-        <div class="topbar">
-          <div class="topbar-left">
-            <button class="icon-btn sidebar-top-btn" data-act="open-sidebar" title="Sidebarni ochish">
-              ${icon("menu", 18)}
-            </button>
-            <div class="topbar-brand" data-act="open-sidebar" title="Sidebarni ochish">
-              <div class="logo-box sm">T</div>
-              <span class="topbar-brand-name">Topex</span>
-            </div>
-            <h1>${TITLES[route] || 'Asosiy'}</h1>
-          </div>
-
-          <div class="top-right">
-            <div class="live-clock">
-              <span class="live-dot"></span>
-              <span id="digital-clock">--:--</span>
-            </div>
-
-            <button class="icon-btn" data-act="sound" title="Ovoz">
-              ${icon(S.settings && S.settings.soundEnabled ? "volume" : "volumeX", 17)}
-            </button>
-
-            <button class="icon-btn" data-act="theme" title="Mavzu">
-              ${icon(S.session.theme === "dark" ? "sun" : "moon", 17)}
-            </button>
-
-            <div class="user-profile-chip" data-act="go" data-to="#/profile">
-              <div class="avatar">${initials(S.teacher.name)}</div>
-              <span>${esc(S.teacher.name.split(" ")[0])}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="page-body ${isPageSwitch ? "page-enter" : ""}" id="page-body">
-          ${content}
-        </div>
-      </main>
-    </div>
-  `;
+  $app.innerHTML = UILayout.DashboardLayout({
+    role: "teacher",
+    activeNav,
+    title: TITLES[route] || "Asosiy",
+    navItems: NAV.map(([id, iconName, label]) => {
+      let count = null;
+      if (id === "students") count = S.students ? S.students.length : 0;
+      if (id === "groups") count = S.groups ? S.groups.length : 0;
+      if (id === "homework") count = S.homework ? S.homework.length : 0;
+      return {
+        id,
+        icon: iconName,
+        label,
+        count,
+        href: `#/${id}`,
+        attr: `data-act="go" data-to="#/${id}"`
+      };
+    }),
+    user: {
+      ...(S.teacher || {}),
+      name: (S.teacher && S.teacher.name) || "Azamat Qodirov",
+      soundEnabled: Boolean(S.settings && S.settings.soundEnabled)
+    },
+    bodyHtml: content,
+    onLogout: "logout()",
+    sidebarCollapsed: ui.sidebarCollapsed,
+    sidebarMenuOpen: ui.menu,
+    pageClass: `${isPageSwitch ? "page-enter " : ""}page-body`
+  });
 
   updateClock();
   const m = document.getElementById("msgs");
@@ -1323,6 +1653,28 @@ function cancelSidebarTimer() {
   if (timerBar) {
     timerBar.classList.remove("running");
   }
+}
+
+function startAutoCloseTimer(duration = 5000) {
+  if (window.innerWidth <= 900) return;
+  if (ui.sidebarPinned) return;
+  const sidebar = document.getElementById("sidebar");
+  if (!sidebar) return;
+  if (!ui.sidebarCollapsed || !sidebar.classList.contains("hover-expanded")) return;
+
+  const timerBar = document.getElementById("sidebar-timer-bar");
+  if (timerBar) {
+    timerBar.classList.remove("running");
+    void timerBar.offsetWidth;
+    timerBar.classList.add("running");
+  }
+
+  if (sidebarTimer) clearTimeout(sidebarTimer);
+  sidebarTimer = setTimeout(() => {
+    if (!window._sidebarIsHovered && !ui.sidebarPinned) {
+      collapseSidebar(false);
+    }
+  }, duration);
 }
 
 function collapseSidebar(showToast = true) {
@@ -1348,8 +1700,8 @@ function collapseSidebar(showToast = true) {
 function expandSidebar(showToast = true) {
   cancelSidebarTimer();
   ui.sidebarCollapsed = false;
-  ui.sidebarPinned = true;
-  localStorage.setItem("topex_sidebar_pinned", "true");
+  ui.sidebarPinned = false;
+  localStorage.removeItem("topex_sidebar_pinned");
   window._sidebarJustClosed = false;
 
   const layout = document.querySelector(".layout");
@@ -1358,14 +1710,14 @@ function expandSidebar(showToast = true) {
   if (sidebar) {
     sidebar.classList.remove("collapsed", "hover-expanded");
     const pinBtn = sidebar.querySelector(".sidebar-pin-btn");
-    if (pinBtn) pinBtn.classList.add("active");
+    if (pinBtn) pinBtn.classList.remove("active");
   }
-  if (showToast) toast("Sidebar ochildi 📌");
+  startAutoCloseTimer(5000);
+  if (showToast) toast("Sidebar ochildi (5s) ⏱️");
 }
 
 function setupSidebarEvents() {
   const sidebar = document.getElementById("sidebar");
-  const timerBar = document.getElementById("sidebar-timer-bar");
   if (!sidebar) return;
 
   // Agar foydalanuvchi tugma orqali hozirgina yopgan bo'lsa, hover bilan qayta ochilmasin
@@ -1374,25 +1726,6 @@ function setupSidebarEvents() {
   } else if (window._sidebarIsHovered && ui.sidebarCollapsed) {
     sidebar.classList.add("hover-expanded");
   }
-
-  const startAutoCloseTimer = () => {
-    if (window.innerWidth <= 900) return;
-    if (ui.sidebarPinned) return;
-    if (ui.sidebarCollapsed && !sidebar.classList.contains("hover-expanded")) return;
-
-    if (timerBar) {
-      timerBar.classList.remove("running");
-      void timerBar.offsetWidth;
-      timerBar.classList.add("running");
-    }
-
-    if (sidebarTimer) clearTimeout(sidebarTimer);
-    sidebarTimer = setTimeout(() => {
-      if (!window._sidebarIsHovered && !ui.sidebarPinned) {
-        collapseSidebar(false);
-      }
-    }, 10000);
-  };
 
   sidebar.onmouseenter = () => {
     if (window.innerWidth <= 900) return;
@@ -1411,19 +1744,17 @@ function setupSidebarEvents() {
     window._sidebarIsHovered = false;
     window._sidebarJustClosed = false;
 
-    startAutoCloseTimer();
+    startAutoCloseTimer(5000);
   };
 
-  if (!window._sidebarIsHovered && !ui.sidebarPinned && !ui.sidebarCollapsed && !sidebarTimer && !window._sidebarJustClosed) {
-    startAutoCloseTimer();
-  }
 }
 
 function updateClock() {
-  const el = document.getElementById("digital-clock");
-  if (!el) return;
   const now = new Date();
-  el.textContent = now.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
+  const timeStr = now.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
+  document.querySelectorAll("#digital-clock, .clock-text, .live-clock-text").forEach(el => {
+    el.textContent = timeStr;
+  });
 }
 setInterval(updateClock, 1000);
 
@@ -1434,6 +1765,19 @@ window.addEventListener("hashchange", () => {
 
 /* Hodisalar */
 document.addEventListener("click", async e => {
+  // Tezkor test login tugmasi
+  const quickBtn = e.target.closest(".quick-login-btn");
+  if (quickBtn) {
+    const phone = quickBtn.dataset.phone;
+    const pw = quickBtn.dataset.pw;
+    const phoneInp = document.getElementById("login-phone-input");
+    const pwInp = document.getElementById("login-pw-input");
+    if (phoneInp) phoneInp.value = phone;
+    if (pwInp) pwInp.value = pw;
+    toast("Test ma'lumotlari kiritildi!", "ok");
+    return;
+  }
+
   const toggleBtn = e.target.closest("#pw-toggle-btn");
   if (toggleBtn) {
     const pwInput = document.getElementById("login-pw-input");
@@ -1443,6 +1787,27 @@ document.addEventListener("click", async e => {
       toggleBtn.innerHTML = icon(isPw ? "eyeOff" : "eye", 18);
     }
     return;
+  }
+
+  // Boshqa joy bosilganda sidebarni yopish (Click outside)
+  const sidebar = document.getElementById("sidebar");
+  const isInsideSidebar = sidebar && sidebar.contains(e.target);
+  const isSidebarTrigger = e.target.closest("[data-act='open-sidebar']") ||
+                           e.target.closest("[data-act='menu']") ||
+                           e.target.closest("[data-act='toggle-sidebar']") ||
+                           e.target.closest(".sidebar-top-btn") ||
+                           e.target.closest(".topbar-brand");
+
+  if (!isInsideSidebar && !isSidebarTrigger) {
+    if (ui.menu) {
+      closeMobileSidebar();
+    }
+    if (!ui.sidebarCollapsed && !ui.sidebarPinned) {
+      collapseSidebar(false);
+    } else if (sidebar && sidebar.classList.contains("hover-expanded")) {
+      sidebar.classList.remove("hover-expanded");
+      cancelSidebarTimer();
+    }
   }
 
   const el = e.target.closest("[data-act]");
@@ -1511,13 +1876,18 @@ document.addEventListener("click", async e => {
       const sidebar = document.getElementById("sidebar");
       const pinBtn = sidebar ? sidebar.querySelector(".sidebar-pin-btn") : null;
       if (ui.sidebarPinned) {
-        expandSidebar(false);
+        ui.sidebarCollapsed = false;
+        localStorage.setItem("topex_sidebar_pinned", "true");
         if (pinBtn) pinBtn.classList.add("active");
+        const layout = document.querySelector(".layout");
+        if (layout) layout.classList.remove("sidebar-collapsed");
+        if (sidebar) sidebar.classList.remove("collapsed", "hover-expanded");
         toast("Sidebar qadandi — o'zi yopilmaydi 📌");
       } else {
         localStorage.removeItem("topex_sidebar_pinned");
         if (pinBtn) pinBtn.classList.remove("active");
-        toast("Avto-yopilish yoqildi (10s) ⏱️");
+        startAutoCloseTimer(5000);
+        toast("Avto-yopilish yoqildi (5s) ⏱️");
       }
       break;
     }
@@ -1552,6 +1922,10 @@ document.addEventListener("click", async e => {
       ui.filter = el.dataset.v;
       render();
       break;
+    case "filter-hw":
+      ui.hwFilter = el.dataset.filter || "all";
+      render();
+      break;
     case "open-group":
       if (window.innerWidth <= 900) closeMobileSidebar();
       ui.attDate = null;
@@ -1572,9 +1946,10 @@ document.addEventListener("click", async e => {
     case "quick-prompt": {
       const promptText = el.dataset.p;
       const chatInput = document.getElementById("chat-input");
-      if (chatInput) {
+      const chatForm = document.getElementById("chat-form");
+      if (chatInput && chatForm) {
         chatInput.value = promptText;
-        chatInput.focus();
+        chatForm.dispatchEvent(new Event("submit", { cancelable: true }));
       }
       break;
     }
@@ -1687,15 +2062,26 @@ document.addEventListener("click", async e => {
       toast("Barchasi keldi deb belgilandi", "ok");
       break;
     }
-    case "add-student":
-      studentForm(null, el.dataset.gid);
+    case "clear-search": {
+      ui.search = "";
+      const inp = document.getElementById("search");
+      if (inp) {
+        inp.value = "";
+        inp.focus();
+      }
+      updateStudentsView();
       break;
+    }
+    case "add-student":
+      studentForm(null, el.dataset.gid || ui.groupFilter);
+      break;
+    case "open-student":
     case "edit-student":
-      studentForm(S.students.find(s => s.id === id));
+      studentForm(S.students.find(s => String(s.id) === String(id)));
       break;
     case "del-student":
       if (confirm("O'quvchini o'chirishni xohlaysizmi?")) {
-        S.students = S.students.filter(s => s.id !== id);
+        S.students = S.students.filter(s => String(s.id) !== String(id));
         save();
         render();
         toast("O'chirildi");
@@ -1734,7 +2120,7 @@ document.addEventListener("change", e => {
   }
   if (t.id === "group-filter") {
     ui.groupFilter = t.value;
-    render();
+    updateStudentsView();
   }
   if (t.id === "sound-toggle") {
     if (!S.settings) S.settings = {};
@@ -1746,13 +2132,11 @@ document.addEventListener("change", e => {
 document.addEventListener("input", e => {
   if (e.target.id === "search") {
     ui.search = e.target.value;
-    const pos = e.target.selectionStart;
-    render();
-    const inp = document.getElementById("search");
-    if (inp) {
-      inp.focus();
-      inp.setSelectionRange(pos, pos);
-    }
+    updateStudentsView();
+  }
+  if (e.target.id === "group-filter") {
+    ui.groupFilter = e.target.value;
+    updateStudentsView();
   }
 });
 
@@ -1764,12 +2148,26 @@ document.addEventListener("submit", async e => {
     const btn = f.querySelector("button[type=submit]");
     const errBox = document.getElementById("login-error");
     if (errBox) errBox.classList.add("hidden");
+
+    const phoneVal = (d.phone || d.login || "").trim();
+    const digits = phoneVal.replace(/\D/g, "");
+
+    // Telefon raqami tekshiruvi (faqat raqamlar bo'lishi kerak, string+number emas)
+    if (digits.length < 9) {
+      if (errBox) {
+        errBox.textContent = "Iltimos, to'liq telefon raqam kiriting (masalan: +998 90 123 45 67)";
+        errBox.classList.remove("hidden");
+      }
+      toast("Telefon raqam to'liq kiritilishi shart", "bad");
+      return;
+    }
+
     if (btn) {
       btn.disabled = true;
       btn.textContent = "Kirilmoqda...";
     }
     try {
-      const res = await API.login(d.login, d.pw);
+      const res = await API.login(phoneVal, d.pw);
       if (!S.session) S.session = {};
       S.session.in = true;
       S.session.user = res.user;
@@ -1777,11 +2175,19 @@ document.addEventListener("submit", async e => {
       S = Store.state;
       if (!S.session) S.session = {};
       S.session.in = true;
+      if (!S.teacher) {
+        S.teacher = res.user || {
+          name: "Azamat Qodirov",
+          phone: phoneVal,
+          salary: 6500000
+        };
+      }
+      if (!S.teacher.salary) S.teacher.salary = 6500000;
       currentViewKey = null;
       location.hash = "#/dashboard";
       render();
       fireConfetti();
-      toast("Xush kelibsiz, " + (res.user && res.user.fullname ? res.user.fullname : "Ustoz") + "!", "ok");
+      toast("Xush kelibsiz, " + (res.user && (res.user.fullname || res.user.name) ? (res.user.fullname || res.user.name) : "Ustoz") + "!", "ok");
     } catch (err) {
       if (errBox) {
         errBox.textContent = err.message || "Telefon raqam yoki parol noto'g'ri";
@@ -1987,8 +2393,15 @@ function checkHw(id) {
 }
 
 function exportCSV() {
+  const list = typeof getFilteredStudents === "function" ? getFilteredStudents() : S.students;
   const head = ["F.I.Sh.", "Guruh", "Telefon", "Ota-onasi", "Balans"];
-  const rows = S.students.map(s => [s.name || s.fullname, (groupById(s.groupId) || {}).name || "", s.phone, s.parentPhone || s.father, s.balance]);
+  const rows = (list || []).map(s => [
+    s.name || s.fullname || "",
+    (groupById(s.groupId) || {}).name || "",
+    s.phone || "",
+    s.parentPhone || s.parentName || s.father || "",
+    s.balance || 0
+  ]);
   const csv = "\uFEFF" + [head].concat(rows).map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(",")).join("\n");
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -2010,6 +2423,12 @@ function hidePreloader() {
 
 window.addEventListener("keydown", e => {
   if (e.key === "Escape") {
+    if (document.activeElement && document.activeElement.id === "search" && ui.search) {
+      ui.search = "";
+      document.activeElement.value = "";
+      updateStudentsView();
+      return;
+    }
     if (ui.menu) closeMobileSidebar();
     closeModal();
   }

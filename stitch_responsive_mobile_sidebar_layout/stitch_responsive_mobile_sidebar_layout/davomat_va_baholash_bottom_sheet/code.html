@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+
+<html lang="uz"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "outline": "#777587", "on-secondary-fixed": "#002113", "on-secondary-fixed-variant": "#005236", "on-secondary-container": "#00714d", "surface-container": "#e7eeff", "on-background": "#111c2d", "on-tertiary-fixed-variant": "#7b2f00", "on-primary-fixed": "#0f0069", "on-primary-fixed-variant": "#3323cc", "background": "#f9f9ff", "surface-bright": "#f9f9ff", "on-surface-variant": "#464555", "surface-dim": "#cfdaf2", "inverse-on-surface": "#ecf1ff", "primary-fixed-dim": "#c3c0ff", "surface-container-high": "#dee8ff", "surface-container-highest": "#d8e3fb", "tertiary-fixed-dim": "#ffb695", "on-secondary": "#ffffff", "error-container": "#ffdad6", "on-tertiary": "#ffffff", "secondary-fixed-dim": "#4edea3", "primary": "#3525cd", "surface-tint": "#4d44e3", "on-tertiary-container": "#ffd2be", "primary-fixed": "#e2dfff", "tertiary-container": "#a44100", "secondary-fixed": "#6ffbbe", "tertiary": "#7e3000", "tertiary-fixed": "#ffdbcc", "on-error-container": "#93000a", "secondary": "#006c49", "inverse-surface": "#263143", "on-primary-container": "#dad7ff", "surface-container-low": "#f0f3ff", "surface": "#f9f9ff", "error": "#ba1a1a", "on-primary": "#ffffff", "on-error": "#ffffff", "on-tertiary-fixed": "#351000", "outline-variant": "#c7c4d8", "surface-variant": "#d8e3fb", "on-surface": "#111c2d", "surface-container-lowest": "#ffffff", "primary-container": "#4f46e5", "inverse-primary": "#c3c0ff", "secondary-container": "#6cf8bb" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xs": "0.25rem", "space-sm": "0.5rem", "space-md": "0.75rem", "space-lg": "1rem", "space-xl": "1.5rem", "margin": "1rem", "gutter": "0.75rem", "margin-tablet": "1.5rem", "gutter-tablet": "1rem" }, "fontFamily": { "headline-lg": ["Inter"], "headline-xl": ["Inter"], "body-lg": ["Inter"], "body-sm": ["Inter"], "label-md": ["Inter"], "label-sm": ["Inter"], "headline-md": ["Inter"], "body-md": ["Inter"], "title-sm": ["Inter"] }, "fontSize": { "headline-lg": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "headline-xl": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400" }], "body-sm": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.03em", "fontWeight": "500" }], "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }], "title-sm": ["16px", { "lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "600" }] } } } }</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen antialiased"><header class="fixed top-0 w-full z-50 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.03)] pt-safe"><div class="h-16 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-lg bg-primary-container flex items-center justify-center shadow-[0_2px_6px_rgba(79,70,229,0.3)]"><span class="font-headline-md text-headline-md text-on-primary font-bold leading-none">T</span></div><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-title-sm text-title-sm text-on-surface tracking-tight leading-none">EduControl</span><span class="text-[10px] text-on-surface-variant leading-none font-medium">/</span></div><span class="font-label-sm text-label-sm text-primary tracking-wider uppercase font-semibold leading-none mt-0.5">O'QITUVCHI PORTALI</span></div></div><div class="flex items-center gap-space-sm"><span class="inline-flex items-center px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-sm text-label-sm font-semibold">Ustoz</span><div class="w-9 h-9 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed-variant font-title-sm text-title-sm font-semibold"><span class="text-xs leading-none">AQ</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-20 bg-surface px-margin"><div class="flex flex-col w-full relative -mx-margin">
+<!-- Dimmed & Blurred Underlying Screen: "Dars Jadvali" Context -->
+<div aria-hidden="true" class="w-full px-margin py-space-sm opacity-35 filter blur-[1.5px] pointer-events-none select-none flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-headline-lg text-headline-lg text-on-surface">Dars jadvali</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Haftalik reja • Bugun Seshanba</span>
+</div>
+<div class="px-3 py-1 bg-surface-container-high rounded-full">
+<span class="font-label-sm text-label-sm text-primary font-semibold">18 Sentabr</span>
+</div>
+</div>
+<!-- Calendar Day Cards Preview -->
+<div class="grid grid-cols-2 gap-gutter">
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<span class="font-title-sm text-title-sm text-on-surface">Dushanba</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant block mt-1">Dars yo'q</span>
+</div>
+<div class="bg-primary-container text-on-primary rounded-xl p-space-md shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-title-sm text-title-sm text-on-primary font-semibold">Seshanba</span>
+<span class="w-2 h-2 rounded-full bg-secondary-fixed"></span>
+</div>
+<span class="font-body-sm text-body-sm text-on-primary-container block mt-1">Frontend-102 (Faol)</span>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<span class="font-title-sm text-title-sm text-on-surface">Chorshanba</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant block mt-1">Dars yo'q</span>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<span class="font-title-sm text-title-sm text-on-surface">Payshanba</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant block mt-1">Frontend-102</span>
+</div>
+</div>
+</div>
+<!-- Bottom Sheet Overlay Container -->
+<div class="fixed inset-0 z-40 bg-on-background/50 backdrop-blur-sm transition-opacity flex flex-col justify-end">
+<!-- Bottom Sheet Content Area -->
+<div class="w-full max-h-[777px] bg-surface-container-lowest rounded-t-[28px] shadow-[0_-10px_35px_rgba(17,28,45,0.18)] flex flex-col overflow-hidden animate-[slideUp_0.3s_ease-out]">
+<!-- Drag Handle & Top Header -->
+<div class="pt-3 px-margin pb-space-sm bg-surface-container-lowest sticky top-0 z-20">
+<div class="w-12 h-1.5 rounded-full bg-outline-variant/60 mx-auto mb-3"></div>
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-md text-headline-md text-on-surface tracking-tight">Davomat va baholash</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-sm text-label-sm font-semibold">Jonli</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate mt-0.5">
+              Frontend-102 • JavaScript Chuqurlashtirilgan (11:00 - 12:30)
+            </p>
+</div>
+<button aria-label="Yopish" class="w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:text-on-surface active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Quick Summary Badges & Quick Action -->
+<div class="mt-space-md flex flex-wrap items-center justify-between gap-space-xs">
+<div class="flex items-center gap-1.5 overflow-x-auto py-0.5">
+<span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-surface-container text-on-surface font-label-sm text-label-sm font-medium">
+              Jami: <strong class="ml-1 font-semibold">18</strong>
+</span>
+<span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[14px] mr-1">check_circle</span> Bor: 16
+            </span>
+<span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[14px] mr-1">schedule</span> Sababli: 1
+            </span>
+<span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[14px] mr-1">cancel</span> Yo'q: 1
+            </span>
+</div>
+<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container-high text-primary font-label-md text-label-md font-semibold hover:bg-primary-fixed active:scale-95 transition-all" id="quick-all-present">
+<span class="material-symbols-outlined text-[16px]">done_all</span>
+<span>Barchasi 'Bor'</span>
+</button>
+</div>
+<!-- Search Input -->
+<div class="mt-space-sm relative flex items-center">
+<span class="material-symbols-outlined text-outline text-[18px] absolute left-3 pointer-events-none">search</span>
+<input class="w-full h-10 pl-9 pr-9 bg-surface-container-low rounded-xl font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest shadow-sm" placeholder="O'quvchini qidirish yoki ID..." type="text"/>
+<span class="material-symbols-outlined text-outline text-[18px] absolute right-3 cursor-pointer">tune</span>
+</div>
+</div>
+<!-- Scrollable Students Attendance & Grade List -->
+<div class="flex-1 overflow-y-auto px-margin py-space-sm space-y-space-sm">
+<!-- Student 1: Dilshodbek Mahmudov (Present, Grade 5) -->
+<div class="student-card p-space-sm bg-surface-container-low rounded-xl shadow-[0_1px_4px_rgba(17,28,45,0.04)] flex flex-col gap-space-xs transition-colors">
+<div class="flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="relative flex-shrink-0">
+<div class="w-10 h-10 rounded-full bg-primary-fixed text-on-primary-fixed font-title-sm text-title-sm font-semibold flex items-center justify-center">
+                  DM
+                </div>
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-secondary-fixed-dim"></span>
+</div>
+<div class="min-w-0 flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-title-sm text-title-sm text-on-surface font-semibold truncate">Dilshodbek Mahmudov</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant text-[10px] font-mono font-medium">#FE-1024</span>
+</div>
+<span class="font-body-sm text-body-sm text-secondary font-medium flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]">stars</span>
+                  98% o'zlashtirish • Kurs yetakchisi
+                </span>
+</div>
+</div>
+<!-- Quick Grade Badge with Feedback -->
+<button class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold active:scale-95 transition-transform shadow-sm">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>5</span>
+</button>
+</div>
+<!-- Attendance Segmented Buttons -->
+<div class="grid grid-cols-3 gap-1.5 p-1 bg-surface-container-lowest rounded-lg">
+<button class="att-btn flex items-center justify-center gap-1 py-1.5 rounded-md bg-secondary text-on-secondary font-label-sm text-label-sm font-semibold transition-all">
+<span class="material-symbols-outlined text-[15px]">check</span>
+              Bor
+            </button>
+<button class="att-btn flex items-center justify-center gap-1 py-1.5 rounded-md text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-all">
+<span class="material-symbols-outlined text-[15px]">schedule</span>
+              Sababli
+            </button>
+<button class="att-btn flex items-center justify-center gap-1 py-1.5 rounded-md text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-all">
+<span class="material-symbols-outlined text-[15px]">close</span>
+              Yo'q
+            </button>
+</div>
+</div>
+<!-- Student 2: Madina Karimova (Present, Grade 5 + Homework tag) -->
+<div class="student-card p-space-sm bg-surface-container-low rounded-xl shadow-[0_1px_4px_rgba(17,28,45,0.04)] flex flex-col gap-space-xs transition-colors">
+<div class="flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="relative flex-shrink-0">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed text-on-secondary-fixed font-title-sm text-title-sm font-semibold flex items-center justify-center">
+                  MK
+                </div>
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-secondary-fixed-dim"></span>
+</div>
+<div class="min-w-0 flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-title-sm text-title-sm text-on-surface font-semibold truncate">Madina Karimova</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant text-[10px] font-mono font-medium">#FE-1031</span>
+</div>
+<span class="font-body-sm text-body-sm text-primary font-medium flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]">assignment_turned_in</span>
+                  Uy vazifasi: A'lo topshirildi
+                </span>
+</div>
+</div>
+<!-- Grade -->
+<button class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold active:scale-95 transition-transform shadow-sm">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>5</span>
+</button>
+</div>
+<!-- Attendance Segmented Buttons -->
+<div class="grid grid-cols-3 gap-1.5 p-1 bg-surface-container-lowest rounded-lg">
+<button class="att-btn flex items-center justify-center gap-1 py-1.5 rounded-md bg-secondary text-on-secondary font-label-sm text-label-sm font-semibold transition-all">
+<span class="material-symbols-outlined text-[15px]">check</span>
+              Bor
+            </button>
+<button class="att-btn flex items-center justify-center gap-1 py-1.5 rounded-md text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-all">
+<span class="material-symbols-outlined text-[15px]">schedule</span>
+              Sababli
+            </button>
+<button class="att-btn flex items-center justify-center gap-1 py-1.5 rounded-md text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-all">
+<span class="material-symbols-outlined text-[15px]">close</span>
+              Yo'q
+            </button>
+</div>
+</div>
+<!-- Student 3: Jasur Rustamov (Sababli - Late / Excused) -->
+<div class="student-card p-space-sm bg-surface-container-low rounded-xl shadow-[0_1px_4px_rgba(17,28,45,0.04)] flex flex-col gap-space-xs transition-colors">
+<div class="flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="relative flex-shrink-0">
+<div class="w-10 h-10 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-title-sm text-title-sm font-semibold flex items-center justify-center">
+                  JR
+                </div>
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-outline-variant"></span>
+</div>
+<div class="min-w-0 flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-title-sm text-title-sm text-on-surface font-semibold truncate">Jasur Rustamov</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant text-[10px] font-mono font-medium">#FE-1018</span>
+</div>
+<span class="font-body-sm text-body-sm text-tertiary font-medium flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]">notification_important</span>
+                  Shifokor ma'lumotnomasi mavjud
+                </span>
+</div>
+</div>
+<!-- Excused status tag instead of active grade -->
+<button class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-container-high text-on-surface-variant font-label-md text-label-md font-medium active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[14px]">edit_note</span>
+<span>-</span>
+</button>
+</div>
+<!-- Attendance Segmented Buttons -->
+<div class="grid grid-cols-3 gap-1.5 p-1 bg-surface-container-lowest rounded-lg">
+<button class="att-btn flex items-center justify-center gap-1 py-1.5 rounded-md text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-all">
+<span class="material-symbols-outlined text-[15px]">check</span>
+              Bor
+            </button>
+<button class="att-btn flex items-center justify-center gap-1 py-1.5 rounded-md bg-tertiary-container text-on-primary font-label-sm text-label-sm font-semibold transition-all">
+<span class="material-symbols-outlined text-[15px]">schedule</span>
+              Sababli
+            </button>
+<button class="att-btn flex items-center justify-center gap-1 py-1.5 rounded-md text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-all">
+<span class="material-symbols-outlined text-[15px]">close</span>
+              Yo'q
+            </button>
+</div>
+</div>
+<!-- Student 4: Shahzoda Aliyeva (Present, Grade 4) -->
+<div class="student-card p-space-sm bg-surface-container-low rounded-xl shadow-[0_1px_4px_rgba(17,28,45,0.04)] flex flex-col gap-space-xs transition-colors">
+<div class="flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="relative flex-shrink-0">
+<div class="w-10 h-10 rounded-full bg-primary-fixed-dim text-on-primary-fixed-variant font-title-sm text-title-sm font-semibold flex items-center justify-center">
+                  SA
+                </div>
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-secondary-fixed-dim"></span>
+</div>
+<div class="min-w-0 flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-title-sm text-title-sm text-on-surface font-semibold truncate">Shahzoda Aliyeva</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant text-[10px] font-mono font-medium">#FE-1042</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]">history_edu</span>
+                  Amaliy topshiriq: 84 ball
+                </span>
+</div>
+</div>
+<!-- Grade 4 -->
+<button class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary-fixed text-on-primary-fixed font-label-md text-label-md font-semibold active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>4</span>
+</button>
+</div>
+<!-- Attendance Segmented Buttons -->
+<div class="grid grid-cols-3 gap-1.5 p-1 bg-surface-container-lowest rounded-lg">
+<button class="att-btn flex items-center justify-center gap-1 py-1.5 rounded-md bg-secondary text-on-secondary font-label-sm text-label-sm font-semibold transition-all">
+<span class="material-symbols-outlined text-[15px]">check</span>
+              Bor
+            </button>
+<button class="att-btn flex items-center justify-center gap-1 py-1.5 rounded-md text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-all">
+<span class="material-symbols-outlined text-[15px]">schedule</span>
+              Sababli
+            </button>
+<button class="att-btn flex items-center justify-center gap-1 py-1.5 rounded-md text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-all">
+<span class="material-symbols-outlined text-[15px]">close</span>
+              Yo'q
+            </button>
+</div>
+</div>
+<!-- Student 5: Bobur Mirzayev (Absent - SMS Alert) -->
+<div class="student-card p-space-sm bg-surface-container-low rounded-xl shadow-[0_1px_4px_rgba(17,28,45,0.04)] flex flex-col gap-space-xs transition-colors">
+<div class="flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="relative flex-shrink-0">
+<div class="w-10 h-10 rounded-full bg-error-container text-on-error-container font-title-sm text-title-sm font-semibold flex items-center justify-center">
+                  BM
+                </div>
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-error"></span>
+</div>
+<div class="min-w-0 flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-title-sm text-title-sm text-on-surface font-semibold truncate">Bobur Mirzayev</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant text-[10px] font-mono font-medium">#FE-1009</span>
+</div>
+<span class="font-body-sm text-body-sm text-error font-medium flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]">sms</span>
+                  Ota-onaga SMS yuboriladi
+                </span>
+</div>
+</div>
+<!-- Grade: none / Absent -->
+<div class="px-2 py-1 rounded bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">
+              Kelmadi
+            </div>
+</div>
+<!-- Attendance Segmented Buttons -->
+<div class="grid grid-cols-3 gap-1.5 p-1 bg-surface-container-lowest rounded-lg">
+<button class="att-btn flex items-center justify-center gap-1 py-1.5 rounded-md text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-all">
+<span class="material-symbols-outlined text-[15px]">check</span>
+              Bor
+            </button>
+<button class="att-btn flex items-center justify-center gap-1 py-1.5 rounded-md text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-all">
+<span class="material-symbols-outlined text-[15px]">schedule</span>
+              Sababli
+            </button>
+<button class="att-btn flex items-center justify-center gap-1 py-1.5 rounded-md bg-error text-on-error font-label-sm text-label-sm font-semibold transition-all">
+<span class="material-symbols-outlined text-[15px]">close</span>
+              Yo'q
+            </button>
+</div>
+</div>
+</div>
+<!-- Bottom Sticky Actions & SMS Notification Toggle -->
+<div class="p-margin bg-surface-container-lowest shadow-[0_-4px_16px_rgba(17,28,45,0.06)] flex flex-col gap-space-md">
+<!-- SMS Option Checkbox Bar -->
+<label class="flex items-center gap-space-sm p-2 rounded-lg bg-surface-container-low cursor-pointer select-none">
+<input checked="" class="w-4 h-4 accent-primary rounded cursor-pointer" type="checkbox"/>
+<div class="flex items-center justify-between w-full min-w-0 pr-1">
+<span class="font-body-sm text-body-sm text-on-surface font-medium truncate">
+              Kelmagen o'quvchilar oilasiga avtomatik SMS yuborish
+            </span>
+<span class="material-symbols-outlined text-primary text-[18px] flex-shrink-0 ml-1">mark_chat_unread</span>
+</div>
+</label>
+<!-- CTA Action Buttons -->
+<div class="grid grid-cols-2 gap-space-sm">
+<button class="h-12 rounded-xl bg-surface-container-low text-on-surface font-title-sm text-title-sm font-semibold hover:bg-surface-container-high active:scale-95 transition-all flex items-center justify-center">
+            Bekor qilish
+          </button>
+<button class="h-12 rounded-xl bg-primary-container text-on-primary font-title-sm text-title-sm font-semibold hover:bg-primary shadow-[0_4px_12px_rgba(79,70,229,0.35)] active:scale-95 transition-all flex items-center justify-center gap-1.5" id="save-attendance-btn">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+<span>Saqlash</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Interactive Micro-interactions for Modal & Attendance Toggles
+  document.addEventListener('DOMContentLoaded', () => {
+    // Attendance button toggle handling
+    const cards = document.querySelectorAll('.student-card');
+    cards.forEach(card => {
+      const buttons = card.querySelectorAll('.att-btn');
+      buttons.forEach((btn, idx) => {
+        btn.addEventListener('click', () => {
+          buttons.forEach(b => {
+            b.className = 'att-btn flex items-center justify-center gap-1 py-1.5 rounded-md text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-all';
+          });
+          if (idx === 0) {
+            btn.className = 'att-btn flex items-center justify-center gap-1 py-1.5 rounded-md bg-secondary text-on-secondary font-label-sm text-label-sm font-semibold transition-all';
+          } else if (idx === 1) {
+            btn.className = 'att-btn flex items-center justify-center gap-1 py-1.5 rounded-md bg-tertiary-container text-on-primary font-label-sm text-label-sm font-semibold transition-all';
+          } else {
+            btn.className = 'att-btn flex items-center justify-center gap-1 py-1.5 rounded-md bg-error text-on-error font-label-sm text-label-sm font-semibold transition-all';
+          }
+        });
+      });
+    });
+
+    // Quick Mark All Present button
+    const quickAllBtn = document.getElementById('quick-all-present');
+    if (quickAllBtn) {
+      quickAllBtn.addEventListener('click', () => {
+        cards.forEach(card => {
+          const buttons = card.querySelectorAll('.att-btn');
+          if (buttons.length >= 3) {
+            buttons.forEach(b => {
+              b.className = 'att-btn flex items-center justify-center gap-1 py-1.5 rounded-md text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-all';
+            });
+            buttons[0].className = 'att-btn flex items-center justify-center gap-1 py-1.5 rounded-md bg-secondary text-on-secondary font-label-sm text-label-sm font-semibold transition-all';
+          }
+        });
+      });
+    }
+
+    // Save button toast feedback simulation
+    const saveBtn = document.getElementById('save-attendance-btn');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => {
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">refresh</span><span>Saqlanmoqda...</span>';
+        setTimeout(() => {
+          saveBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">task_alt</span><span>Muvaffaqiyatli!</span>';
+          saveBtn.classList.remove('bg-primary-container');
+          saveBtn.classList.add('bg-secondary');
+          setTimeout(() => {
+            saveBtn.innerHTML = originalText;
+            saveBtn.classList.remove('bg-secondary');
+            saveBtn.classList.add('bg-primary-container');
+          }, 1400);
+        }, 700);
+      });
+    }
+  });
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-2px_10px_rgba(15,23,42,0.04)]" data-active-classes="text-primary font-semibold"><div class="flex justify-around items-center h-16 px-space-xs"><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[44px] text-on-surface-variant transition-colors hover:text-on-surface" data-path="asosiy" href="#"><span class="material-symbols-outlined text-[22px]">dashboard</span><span class="font-label-sm text-label-sm">Asosiy</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[44px] text-on-surface-variant transition-colors hover:text-on-surface" data-path="oquvchilar" href="#"><span class="material-symbols-outlined text-[22px]">school</span><span class="font-label-sm text-label-sm">O'quvchilar</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[44px] text-on-surface-variant transition-colors hover:text-on-surface" data-path="jadval" href="#"><span class="material-symbols-outlined text-[22px]">calendar_today</span><span class="font-label-sm text-label-sm">Jadval</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[44px] text-on-surface-variant transition-colors hover:text-on-surface" data-path="guruhlar" href="#"><span class="material-symbols-outlined text-[22px]">groups</span><span class="font-label-sm text-label-sm">Guruhlar</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[44px] text-on-surface-variant transition-colors hover:text-on-surface" data-path="menyu" href="#"><span class="material-symbols-outlined text-[22px]">menu</span><span class="font-label-sm text-label-sm">Menyu</span></a></div></nav></body></html>
