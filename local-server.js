@@ -261,23 +261,10 @@ const server = http.createServer(async (req, res) => {
               const p = String(w.phone || '').replace(/\D/g, '');
               const matchPhone = norm && (p === norm || p.endsWith(norm) || norm.endsWith(p));
               const matchLogin = w.login && String(w.login).toLowerCase() === rawPhone.toLowerCase();
-              return (matchPhone || matchLogin) && w.password && (verify(password, w.password) || password === w.password);
+              return (matchPhone || matchLogin) && w.password && verify(password, w.password);
             });
             if (worker) {
               user = worker;
-              isTeacher = false;
-            }
-          }
-
-          if (!user) {
-            const directors = await db.collection('directors').find().toArray();
-            const director = directors.find(d => {
-              const p = String(d.phone || '').replace(/\D/g, '');
-              const matchPhone = norm && (p === norm || p.endsWith(norm) || norm.endsWith(p));
-              return matchPhone && d.password && (verify(password, d.password) || password === d.password);
-            });
-            if (director) {
-              user = director;
               isTeacher = false;
             }
           }
@@ -288,7 +275,7 @@ const server = http.createServer(async (req, res) => {
             const p = String(t.phone || '').replace(/\D/g, '');
             const matchPhone = norm && (p === norm || p.endsWith(norm) || norm.endsWith(p));
             const matchLogin = t.login && String(t.login).toLowerCase() === rawPhone.toLowerCase();
-            return (matchPhone || matchLogin) && t.password && (verify(password, t.password) || password === t.password);
+            return (matchPhone || matchLogin) && t.password && verify(password, t.password);
           });
 
           if (!user) {
@@ -297,23 +284,10 @@ const server = http.createServer(async (req, res) => {
               const p = String(w.phone || '').replace(/\D/g, '');
               const matchPhone = norm && (p === norm || p.endsWith(norm) || norm.endsWith(p));
               const matchLogin = w.login && String(w.login).toLowerCase() === rawPhone.toLowerCase();
-              return (matchPhone || matchLogin) && w.password && (verify(password, w.password) || password === w.password);
+              return (matchPhone || matchLogin) && w.password && verify(password, w.password);
             });
             if (worker) {
               user = worker;
-              isTeacher = false;
-            }
-          }
-
-          if (!user) {
-            const dirs = sqliteDb.prepare('SELECT id,data,archived,archived_at,created_at FROM records WHERE col=?').all('directors').map(parseRow);
-            const dir = dirs.find(d => {
-              const p = String(d.phone || '').replace(/\D/g, '');
-              const matchPhone = norm && (p === norm || p.endsWith(norm) || norm.endsWith(p));
-              return matchPhone && d.password && (verify(password, d.password) || password === d.password);
-            });
-            if (dir) {
-              user = dir;
               isTeacher = false;
             }
           }
@@ -331,7 +305,7 @@ const server = http.createServer(async (req, res) => {
         const sessionData = {
           token,
           id: user.id,
-          fullname: user.fullname || user.name,
+          fullname: user.fullname,
           phone: user.phone,
           isTeacher,
           expiresAt: new Date(Date.now() + 30 * 24 * 3600 * 1000)
@@ -349,7 +323,7 @@ const server = http.createServer(async (req, res) => {
           token,
           user: {
             id: user.id,
-            fullname: user.fullname || user.name,
+            fullname: user.fullname,
             phone: user.phone,
             isTeacher
           }
