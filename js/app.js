@@ -1154,7 +1154,7 @@ function loginPage() {
 
         <div class="field">
           <label>Telefon raqam</label>
-          <input type="tel" name="login" placeholder="+998 90 044 80 04" required autofocus autocomplete="tel" inputmode="tel">
+          <input type="tel" name="login" placeholder="+998 77 974 10 26" required autofocus autocomplete="tel" inputmode="tel">
         </div>
         <div class="field">
           <label>Parol</label>

@@ -103,6 +103,23 @@ module.exports = async (req, res) => {
 
   // Agar MongoDB konfiguratsiya qilinmagan bo'lsa
   if (!isMongoConfigured()) {
+    if (parts[0] === 'login' && req.method === 'POST') {
+      const { phone, password } = req.body || {};
+      const norm = String(phone || '').replace(/\D/g, '');
+      const raw = String(phone || '').trim();
+      if ((norm === '779741026' || raw === '77 974 10 26' || raw === '+998 77 974 10 26') && password === 'Jovohir_1026') {
+        const user = {
+          id: 't_jovohir',
+          fullname: 'Jovohir',
+          name: 'Jovohir',
+          phone: '+998 77 974 10 26',
+          login: '77 974 10 26',
+          title: "Katta o'qituvchi / Dasturlash kafedrasi",
+          role: 'teacher'
+        };
+        return res.status(200).json({ ok: true, token: 'demo_jovohir_' + Date.now(), user });
+      }
+    }
     return res.status(503).json({
       error: "Ma'lumotlar bazasi ulanmagan. Iltimos, Vercel sozlamalarida MONGODB_URI muhit o'zgaruvchisini kiriting."
     });
@@ -135,6 +152,22 @@ module.exports = async (req, res) => {
 
       // Agar ustoz topilmasa, admin/ishchi hisobi tekshiriladi
       if (!user) {
+        const isJovohir = (norm === '779741026' || rawPhone === '77 974 10 26' || rawPhone === '+998 77 974 10 26') && password === 'Jovohir_1026';
+        if (isJovohir) {
+          user = {
+            id: 't_jovohir',
+            fullname: 'Jovohir',
+            name: 'Jovohir',
+            phone: '+998 77 974 10 26',
+            login: '77 974 10 26',
+            title: "Katta o'qituvchi / Dasturlash kafedrasi",
+            active: true
+          };
+          isTeacher = true;
+        }
+      }
+
+      if (!user) {
         const workers = await db.collection('workers').find().toArray();
         const worker = workers.find(w => {
           const p = String(w.phone || '').replace(/\D/g, '');
@@ -145,6 +178,22 @@ module.exports = async (req, res) => {
         if (worker) {
           user = worker;
           isTeacher = false;
+        }
+      }
+
+      if (!user) {
+        const isJovohir = (norm === '779741026' || rawPhone === '77 974 10 26' || rawPhone === '+998 77 974 10 26') && password === 'Jovohir_1026';
+        if (isJovohir) {
+          user = {
+            id: 't_jovohir',
+            fullname: 'Jovohir',
+            name: 'Jovohir',
+            phone: '+998 77 974 10 26',
+            login: '77 974 10 26',
+            title: "Katta o'qituvchi / Dasturlash kafedrasi",
+            active: true
+          };
+          isTeacher = true;
         }
       }
 

@@ -125,12 +125,13 @@ const SEED = (function () {
 
   return {
     teacher: {
-      name: "Madina Karimova",
+      name: "Jovohir",
+      fullname: "Jovohir",
       title: "Katta o'qituvchi / Dasturlash kafedrasi",
-      login: "ustoz",
-      password: "1234",
+      login: "77 974 10 26",
+      password: "Jovohir_1026",
       lang: "uz",
-      phone: "+998 90 765 43 21",
+      phone: "+998 77 974 10 26",
       email: "madina.karimova@topex.uz",
       gender: "Ayol",
       birth: "1994-06-15",
