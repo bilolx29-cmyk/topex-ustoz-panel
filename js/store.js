@@ -112,7 +112,8 @@ const Store = {
   },
 
   // Serverdan real ma'lumotlarni yuklash (Server Sync)
-  async syncFromServer() {
+  // Serverdan real vaqt rejimida barcha ma'lumotlarni sinxronlash
+  async syncFromServer(options = {}) {
     if (!API.isLoggedIn()) return null;
     this.isSyncing = true;
     this.lastSyncError = null;
@@ -121,7 +122,7 @@ const Store = {
       // Sessiya haqiqiyligini tekshirish
       let meRes = null;
       try {
-        meRes = await API.getMe();
+        meRes = await API.getMe(options);
       } catch (e) {
         console.warn("getMe xatosi:", e.message);
       }
@@ -145,7 +146,7 @@ const Store = {
       // Ustozning barcha real ma'lumotlarini bazadan olish
       let data = null;
       try {
-        data = await API.getTeacherData();
+        data = await API.getTeacherData(options);
       } catch (e) {
         console.warn("getTeacherData xatosi:", e.message);
       }
@@ -159,6 +160,12 @@ const Store = {
         this.state.grades = data.grades || this.state.grades || {};
         this.state.homework = data.homework || this.state.homework || [];
         this.state.chats = (data.chats && Object.keys(data.chats).length) ? { ...prevChats, ...data.chats } : (prevChats || this.state.chats || {});
+        if (data.announcements && data.announcements.length > 0) {
+          this.state.announcements = data.announcements;
+        }
+        if (data.settings) {
+          this.state.settings = { ...this.state.settings, ...data.settings };
+        }
       }
 
       if (!this.state.groups || this.state.groups.length === 0) {
@@ -170,31 +177,26 @@ const Store = {
           this.state.homework = SEED.homework || [];
         }
       }
-        if (!this.state.chats["ai"]) {
-          this.state.chats["ai"] = [
-            {
-              from: "ai",
-              sender: "Topex AI",
-              text: "Assalomu alaykum, hurmatli ustoz! Men TOPEX Texnikum Sun'iy Intellekt (AI) yordamchisiman. Dars rejalari, metodika, dasturlash kodlari, test savollari yoki uy vazifalari bo'yicha qanday yordam bera olaman?",
-              t: Date.now() - 60000
-            }
-          ];
-        }
-        if (data.announcements && data.announcements.length > 0) {
-          this.state.announcements = data.announcements;
-        }
-        if (data.settings) {
-          this.state.settings = { ...this.state.settings, ...data.settings };
-        }
 
-        this.save();
+      if (!this.state.chats) this.state.chats = {};
+      if (!this.state.chats["ai"]) {
+        this.state.chats["ai"] = [
+          {
+            from: "ai",
+            sender: "Topex AI",
+            text: "Assalomu alaykum, hurmatli ustoz! Men TOPEX Texnikum Sun'iy Intellekt (AI) yordamchisiman. Dars rejalari, metodika, dasturlash kodlari, test savollari yoki uy vazifalari bo'yicha qanday yordam bera olaman?",
+            t: Date.now() - 60000
+          }
+        ];
       }
+
+      this.save();
       return this.state;
     } catch (err) {
       console.warn("Server bilan sinxronlashda xatolik:", err.message);
       this.lastSyncError = err.message;
       if (err.status === 401 || err.status === 403) {
-        this.state.session.in = false;
+        if (this.state.session) this.state.session.in = false;
         API.clearSession();
       }
       return this.state;

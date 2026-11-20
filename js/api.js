@@ -2,6 +2,89 @@
  * TOPEX Ustoz Paneli — API Integratsiya Qatlami
  * Asosiy TOPEX CRM bilan xavfsiz va to'liq sinxronlashuv
  */
+
+/**
+ * NetLoader — Faqat internet past bo'lib ishlamay qolganda chiqadigan loader animatsiyasi
+ * Saytga kirishda ko'rinmaydi. Faqat sekin internet yoki oflayn holatda ko'rinadi va darhol to'xtaydi.
+ */
+const NetLoader = {
+  el: null,
+  titleEl: null,
+  subEl: null,
+  active: false,
+  autoCloseTimer: null,
+
+  init() {
+    this.el = document.getElementById("net-loader");
+    if (!this.el) return;
+    this.titleEl = document.getElementById("net-loader-title");
+    this.subEl = document.getElementById("net-loader-sub");
+
+    const closeBtn = document.getElementById("net-loader-close");
+    if (closeBtn && !closeBtn._bound) {
+      closeBtn._bound = true;
+      closeBtn.addEventListener("click", () => this.hide());
+    }
+    const backdrop = this.el.querySelector(".net-loader-backdrop");
+    if (backdrop && !backdrop._bound) {
+      backdrop._bound = true;
+      backdrop.addEventListener("click", () => this.hide());
+    }
+  },
+
+  show(title = "Internet aloqasi past", sub = "Tarmoq tezligi pastligi sababli ma'lumotlar kutilmoqda...") {
+    if (!this.el) this.init();
+    if (!this.el) return;
+
+    if (this.autoCloseTimer) clearTimeout(this.autoCloseTimer);
+    if (this.titleEl) this.titleEl.textContent = title;
+    if (this.subEl) this.subEl.textContent = sub;
+
+    this.el.style.display = "flex";
+    this.el.classList.remove("hidden", "fade-out");
+    this.active = true;
+
+    // Loader to'xtamay qolib ketmasligi uchun 6 soniyalik avto-yopilish
+    this.autoCloseTimer = setTimeout(() => {
+      if (this.active) this.hide();
+    }, 6000);
+  },
+
+  showSlow(title = "Internet tezligi past...", sub = "Serverdan javob kechikmoqda, ma'lumotlar kutilmoqda...") {
+    this.show(title, sub);
+  },
+
+  showOffline(title = "Internet aloqasi yo'q", sub = "Tarmoqqa ulanish mavjud emas. Tizim oflayn kesh rejimida ishlamoqda.") {
+    this.show(title, sub);
+  },
+
+  hide() {
+    if (this.autoCloseTimer) clearTimeout(this.autoCloseTimer);
+    if (!this.el) this.init();
+    if (!this.el) return;
+
+    this.active = false;
+    this.el.classList.add("fade-out");
+    setTimeout(() => {
+      if (!this.active && this.el) {
+        this.el.classList.remove("fade-out");
+        this.el.classList.add("hidden");
+        this.el.style.display = "none";
+      }
+    }, 280);
+  }
+};
+
+// Brauzer tarmoq holati hodisalari
+if (typeof window !== "undefined") {
+  window.addEventListener("online", () => {
+    NetLoader.hide();
+  });
+  window.addEventListener("offline", () => {
+    NetLoader.showOffline();
+  });
+}
+
 const API = {
   tokenKey: "topex_teacher_token",
   userKey: "topex_teacher_user",
@@ -54,6 +137,8 @@ const API = {
 
   // Asosiy HTTP so'rov yuboruvchi yordamchi
   async request(endpoint, options = {}) {
+    const isSilent = !!options.silent;
+
     const headers = {
       "Content-Type": "application/json",
       ...(options.headers || {})
@@ -64,12 +149,36 @@ const API = {
       headers["Authorization"] = `Bearer ${token}`;
     }
 
+    // Tarmoq sekinligini kuzatuvchi taymer
+    // Faqat agar so'rov 2.5 soniyadan ortiq vaqt olsa (ya'ni internet qotganda/sekin bo'lsa) va silent bo'lmasa loader chiqadi
+    let slowTimer = null;
+    let showedSlowLoader = false;
+
+    if (!isSilent && typeof NetLoader !== "undefined") {
+      slowTimer = setTimeout(() => {
+        showedSlowLoader = true;
+        NetLoader.showSlow();
+      }, 2500);
+    }
+
+    // 10 soniyalik xavfsiz abort timeout — hech qachon to'xtamay osilib qolmasligi uchun
+    const controller = new AbortController();
+    const timeoutDuration = options.timeout || 10000;
+    const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
+
     try {
       const response = await fetch(endpoint, {
         ...options,
         headers,
+        signal: controller.signal,
         credentials: "same-origin"
       });
+
+      clearTimeout(timeoutId);
+      if (slowTimer) clearTimeout(slowTimer);
+      if (showedSlowLoader && typeof NetLoader !== "undefined") {
+        NetLoader.hide();
+      }
 
       const contentType = response.headers.get("content-type") || "";
       let data = null;
@@ -94,6 +203,25 @@ const API = {
 
       return data;
     } catch (err) {
+      clearTimeout(timeoutId);
+      if (slowTimer) clearTimeout(slowTimer);
+      if (showedSlowLoader && typeof NetLoader !== "undefined") {
+        NetLoader.hide();
+      }
+
+      // Agar silent bo'lmasa va tarmoq qotib abort bo'lsa yoki offline bo'lsa
+      if (!isSilent && typeof NetLoader !== "undefined") {
+        if (err.name === "AbortError") {
+          console.warn(`API so'rovi vaqti tugadi (timeout): [${endpoint}]`);
+          NetLoader.showSlow("Internet tezligi juda past", "Serverdan o'z vaqtida javob kelmadi. Oflayn rejimda davom etilmoqda.");
+          setTimeout(() => NetLoader.hide(), 2500);
+          throw new Error("Internet tezligi past (so'rov vaqti tugadi)");
+        } else if (!navigator.onLine || (err.message && (err.message.includes("Failed to fetch") || err.message.includes("NetworkError")))) {
+          NetLoader.showOffline();
+          setTimeout(() => NetLoader.hide(), 2500);
+        }
+      }
+
       console.warn(`API so'rovi xatosi [${endpoint}]:`, err.message);
       throw err;
     }
@@ -162,9 +290,9 @@ const API = {
   },
 
   // 3. Joriy sessiyani serverdan tekshirish
-  async getMe() {
+  async getMe(options = {}) {
     try {
-      return await this.request("/api/me");
+      return await this.request("/api/me", options);
     } catch (err) {
       const token = this.getToken();
       if (token && (token.includes("jovohir") || this.getUser())) {
@@ -183,9 +311,9 @@ const API = {
   },
 
   // 4. Ustozning real ma'lumotlarini serverdan yuklab olish
-  async getTeacherData() {
+  async getTeacherData(options = {}) {
     try {
-      const data = await this.request("/api/teacher/data");
+      const data = await this.request("/api/teacher/data", options);
       try {
         localStorage.setItem(this.cachedDataKey, JSON.stringify(data));
       } catch (e) {}

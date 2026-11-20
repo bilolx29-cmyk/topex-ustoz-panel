@@ -35,8 +35,8 @@ let ui = {
   salaryShown: false,
   menu: false,
   isTyping: false,
-  sidebarCollapsed: false,
-  sidebarPinned: localStorage.getItem("topex_sidebar_pinned") === "true"
+  sidebarCollapsed: localStorage.getItem("topex_sidebar_collapsed") !== "false",
+  sidebarPinned: false
 };
 
 /* SVG Ikonkalar */
@@ -484,10 +484,11 @@ function pageGroup(id) {
   if (tab === "att") {
     const rows = list.map((s, i) => {
       const cur = rec[s.id] || "";
+      const isAbsent = cur === "kelmadi" || cur === "sababli";
       const gradeKey = `${g.id}|${s.id}|${date}`;
-      const curGrade = S.grades && S.grades[gradeKey] ? S.grades[gradeKey].score : 0;
+      const curGrade = (!isAbsent && S.grades && S.grades[gradeKey]) ? S.grades[gradeKey].score : 0;
       return `
-        <tr>
+        <tr class="${isAbsent ? "row-absent" : ""}">
           <td>${i + 1}</td>
           <td class="click" data-act="open-student" data-id="${s.id}" style="cursor:pointer" title="O'quvchi ma'lumotlarini ko'rish"><b>${esc(s.name)}</b></td>
           <td>${esc(s.phone)}</td>
@@ -499,9 +500,19 @@ function pageGroup(id) {
             </div>
           </td>
           <td>
-            <div class="grade-picker">
+            <div class="grade-picker ${isAbsent ? "blocked" : ""}" title="${isAbsent ? "Darsga kelmagan o'quvchiga baho qo'yib bo'lmaydi" : ""}">
               ${[1, 2, 3, 4, 5].map(n => `
-                <button type="button" class="grade-btn g${n} ${curGrade === n ? "on" : ""}" data-act="set-att-grade" data-gid="${g.id}" data-sid="${s.id}" data-date="${date}" data-score="${n}" title="${n} baho">${n}</button>
+                <button type="button" 
+                  class="grade-btn g${n} ${curGrade === n ? "on" : ""} ${isAbsent ? "blocked" : ""}" 
+                  ${isAbsent ? "disabled" : ""} 
+                  data-act="${isAbsent ? "blocked-grade" : "set-att-grade"}" 
+                  data-gid="${g.id}" 
+                  data-sid="${s.id}" 
+                  data-date="${date}" 
+                  data-score="${n}" 
+                  title="${isAbsent ? "Darsga kelmagan o'quvchiga baho qo'yib bo'lmaydi" : n + " baho"}">
+                  ${n}
+                </button>
               `).join("")}
             </div>
           </td>
@@ -1230,17 +1241,13 @@ function render() {
     <div class="sidebar-backdrop ${ui.menu ? "open" : ""}" id="sidebar-backdrop" data-act="close-sidebar-mobile"></div>
     <div class="layout ${ui.sidebarCollapsed ? "sidebar-collapsed" : ""}">
       <aside class="sidebar ${ui.menu ? "open" : ""} ${ui.sidebarCollapsed ? "collapsed" : ""}" id="sidebar">
-        <div class="sidebar-timer-bar" id="sidebar-timer-bar" title="10 soniyada yopiladi"></div>
         <div class="brand-wrapper">
-          <div class="brand" data-act="brand-click" title="${ui.sidebarCollapsed ? "Sidebarni ochish" : "Asosiy sahifaga o'tish"}">
+          <div class="brand" data-act="brand-click" title="Asosiy sahifaga o'tish">
             <div class="logo-box">T</div>
             <span class="brand-name">Topex</span>
           </div>
           <div class="sidebar-header-actions">
-            <button class="icon-btn sm sidebar-pin-btn ${ui.sidebarPinned ? "active" : ""}" data-act="toggle-sidebar-pin" title="${ui.sidebarPinned ? "Qadalgan (o'zi yopilmaydi). Avto-rejimga o'tish uchun bosing" : "Qadab qo'yish (avto-yopilmasligi uchun)"}">
-              ${icon("pin", 15)}
-            </button>
-            <button class="icon-btn sm sidebar-toggle-btn" data-act="close-sidebar-now" title="Sidebarni darhol yopish">
+            <button class="icon-btn sm sidebar-toggle-btn" data-act="toggle-sidebar" title="Sidebarni almashtirish">
               ${icon("chevronLeft", 16)}
             </button>
           </div>
@@ -1310,28 +1317,10 @@ function render() {
   setupSidebarEvents();
 }
 
-let sidebarTimer = null;
-window._sidebarIsHovered = false;
-window._sidebarJustClosed = false;
-
-function cancelSidebarTimer() {
-  if (sidebarTimer) {
-    clearTimeout(sidebarTimer);
-    sidebarTimer = null;
-  }
-  const timerBar = document.getElementById("sidebar-timer-bar");
-  if (timerBar) {
-    timerBar.classList.remove("running");
-  }
-}
-
-function collapseSidebar(showToast = true) {
-  cancelSidebarTimer();
+function collapseSidebar() {
   ui.sidebarCollapsed = true;
   ui.sidebarPinned = false;
-  localStorage.removeItem("topex_sidebar_pinned");
-  window._sidebarIsHovered = false;
-  window._sidebarJustClosed = true;
+  localStorage.setItem("topex_sidebar_collapsed", "true");
 
   const layout = document.querySelector(".layout");
   const sidebar = document.getElementById("sidebar");
@@ -1339,68 +1328,29 @@ function collapseSidebar(showToast = true) {
   if (sidebar) {
     sidebar.classList.add("collapsed");
     sidebar.classList.remove("hover-expanded");
-    const pinBtn = sidebar.querySelector(".sidebar-pin-btn");
-    if (pinBtn) pinBtn.classList.remove("active");
   }
-  if (showToast) toast("Sidebar yopildi");
 }
 
-function expandSidebar(showToast = true) {
-  cancelSidebarTimer();
+function expandSidebar() {
   ui.sidebarCollapsed = false;
   ui.sidebarPinned = true;
-  localStorage.setItem("topex_sidebar_pinned", "true");
-  window._sidebarJustClosed = false;
+  localStorage.setItem("topex_sidebar_collapsed", "false");
 
   const layout = document.querySelector(".layout");
   const sidebar = document.getElementById("sidebar");
   if (layout) layout.classList.remove("sidebar-collapsed");
   if (sidebar) {
-    sidebar.classList.remove("collapsed", "hover-expanded");
-    const pinBtn = sidebar.querySelector(".sidebar-pin-btn");
-    if (pinBtn) pinBtn.classList.add("active");
+    sidebar.classList.remove("collapsed");
+    sidebar.classList.add("hover-expanded");
   }
-  if (showToast) toast("Sidebar ochildi 📌");
 }
 
 function setupSidebarEvents() {
   const sidebar = document.getElementById("sidebar");
-  const timerBar = document.getElementById("sidebar-timer-bar");
   if (!sidebar) return;
-
-  // Agar foydalanuvchi tugma orqali hozirgina yopgan bo'lsa, hover bilan qayta ochilmasin
-  if (window._sidebarJustClosed) {
-    sidebar.classList.remove("hover-expanded");
-  } else if (window._sidebarIsHovered && ui.sidebarCollapsed) {
-    sidebar.classList.add("hover-expanded");
-  }
-
-  const startAutoCloseTimer = () => {
-    if (window.innerWidth <= 900) return;
-    if (ui.sidebarPinned) return;
-    if (ui.sidebarCollapsed && !sidebar.classList.contains("hover-expanded")) return;
-
-    if (timerBar) {
-      timerBar.classList.remove("running");
-      void timerBar.offsetWidth;
-      timerBar.classList.add("running");
-    }
-
-    if (sidebarTimer) clearTimeout(sidebarTimer);
-    sidebarTimer = setTimeout(() => {
-      if (!window._sidebarIsHovered && !ui.sidebarPinned) {
-        collapseSidebar(false);
-      }
-    }, 10000);
-  };
 
   sidebar.onmouseenter = () => {
     if (window.innerWidth <= 900) return;
-    if (window._sidebarJustClosed) return;
-
-    window._sidebarIsHovered = true;
-    cancelSidebarTimer();
-
     if (ui.sidebarCollapsed) {
       sidebar.classList.add("hover-expanded");
     }
@@ -1408,15 +1358,10 @@ function setupSidebarEvents() {
 
   sidebar.onmouseleave = () => {
     if (window.innerWidth <= 900) return;
-    window._sidebarIsHovered = false;
-    window._sidebarJustClosed = false;
-
-    startAutoCloseTimer();
+    if (ui.sidebarCollapsed) {
+      sidebar.classList.remove("hover-expanded");
+    }
   };
-
-  if (!window._sidebarIsHovered && !ui.sidebarPinned && !ui.sidebarCollapsed && !sidebarTimer && !window._sidebarJustClosed) {
-    startAutoCloseTimer();
-  }
 }
 
 function updateClock() {
@@ -1506,18 +1451,10 @@ document.addEventListener("click", async e => {
       break;
     }
     case "toggle-sidebar-pin": {
-      cancelSidebarTimer();
-      ui.sidebarPinned = !ui.sidebarPinned;
-      const sidebar = document.getElementById("sidebar");
-      const pinBtn = sidebar ? sidebar.querySelector(".sidebar-pin-btn") : null;
-      if (ui.sidebarPinned) {
-        expandSidebar(false);
-        if (pinBtn) pinBtn.classList.add("active");
-        toast("Sidebar qadandi — o'zi yopilmaydi 📌");
+      if (ui.sidebarCollapsed) {
+        expandSidebar();
       } else {
-        localStorage.removeItem("topex_sidebar_pinned");
-        if (pinBtn) pinBtn.classList.remove("active");
-        toast("Avto-yopilish yoqildi (10s) ⏱️");
+        collapseSidebar();
       }
       break;
     }
@@ -1606,16 +1543,36 @@ document.addEventListener("click", async e => {
       const date = ui.attDate || todayISO();
       try {
         await Store.recordAttendance(gid, date, { [sid]: v });
+        // Agar o'quvchi kelmadi yoki sababli deb belgilansa, uning o'sha kungi bahosi avtomatik tozalansin
+        if (v === "kelmadi" || v === "sababli") {
+          const gradeKey = `${gid}|${sid}|${date}`;
+          if (S.grades && S.grades[gradeKey] && S.grades[gradeKey].score > 0) {
+            await Store.recordGrade(gid, sid, date, 0, gradeKey, "");
+          }
+        }
       } catch (err) {
         console.error("Davomat xatosi:", err);
       }
       render();
       break;
     }
+    case "blocked-grade": {
+      toast("Darsga kelmagan o'quvchiga baho qo'yib bo'lmaydi!", "bad");
+      break;
+    }
     case "set-att-grade": {
       const gid = el.dataset.gid;
       const sid = el.dataset.sid;
       const date = el.dataset.date || (ui.attDate || todayISO());
+      const attKey = `${gid}|${date}`;
+      const curAtt = S.attendance && S.attendance[attKey] ? S.attendance[attKey][sid] : "";
+
+      // Darsga kelmagan (kelmadi yoki sababli) bo'lsa baho qo'yishni bloklaymiz
+      if (curAtt === "kelmadi" || curAtt === "sababli") {
+        toast("Darsga kelmagan o'quvchiga baho qo'yib bo'lmaydi!", "bad");
+        return;
+      }
+
       const score = parseInt(el.dataset.score, 10);
       const gradeKey = `${gid}|${sid}|${date}`;
       const student = S.students.find(s => String(s.id) === String(sid));
@@ -2000,17 +1957,6 @@ function exportCSV() {
   URL.revokeObjectURL(a.href);
 }
 
-function hidePreloader() {
-  const p = document.getElementById("app-preloader");
-  if (!p) return;
-  setTimeout(() => {
-    p.classList.add("fade-out");
-    setTimeout(() => {
-      try { p.remove(); } catch(e) {}
-    }, 450);
-  }, 450);
-}
-
 window.addEventListener("keydown", e => {
   if (e.key === "Escape") {
     if (ui.menu) closeMobileSidebar();
@@ -2018,17 +1964,25 @@ window.addEventListener("keydown", e => {
   }
 });
 
-async function initApp() {
-  if (API.isLoggedIn()) {
-    try {
-      await Store.syncFromServer();
-      S = Store.state;
-    } catch (e) {
-      console.warn("Init sync failed:", e);
-    }
+function initApp() {
+  // 1. Agar qolib ketgan preloader bo'lsa darhol o'chiramiz
+  const p = document.getElementById("app-preloader");
+  if (p) {
+    try { p.remove(); } catch(e) {}
   }
+
+  // 2. Saytga kirganda yoki yangilanganda darhol keshdan chizamiz (hech qanday loadersiz!)
   render();
-  hidePreloader();
+
+  // 3. Agar tizimga kirilgan bo'lsa, orqa fonda (silent) ma'lumotlarni sinxronlaymiz
+  if (API.isLoggedIn()) {
+    Store.syncFromServer({ silent: true }).then(() => {
+      S = Store.state;
+      render();
+    }).catch(err => {
+      console.warn("Init background sync ogohlantirish:", err.message);
+    });
+  }
 }
 
 initApp();

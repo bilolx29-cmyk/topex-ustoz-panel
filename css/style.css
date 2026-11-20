@@ -151,57 +151,44 @@ a {
 
 /* Layout */
 .layout {
-  display: grid;
-  grid-template-columns: 240px 1fr;
+  display: block;
   min-height: 100vh;
-  transition: grid-template-columns 0.34s var(--ease-spring);
+  padding-left: 240px;
+  transition: padding-left 0.3s var(--ease-spring);
 }
 
 .layout.sidebar-collapsed {
-  grid-template-columns: 72px 1fr;
+  padding-left: 72px;
 }
 
-/* Sidebar */
+/* Sidebar — Ekranga doimiy FIXED (sahifani pastga/tepaga aylantirganda qimirlamaydi) */
 .sidebar {
   background: var(--card);
   border-right: 1px solid var(--line);
   padding: 20px 14px;
-  position: sticky;
-  top: 0;
-  height: 100vh;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  height: 100vh !important;
+  height: 100dvh !important;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
-  z-index: 30;
+  z-index: 50 !important;
   width: 240px;
   min-width: 240px;
   box-sizing: border-box;
-  transition: width 0.34s var(--ease-spring),
-              min-width 0.34s var(--ease-spring),
-              padding 0.32s var(--ease-soft),
-              box-shadow 0.34s var(--ease-soft);
+  transition: width 0.3s var(--ease-spring),
+              min-width 0.3s var(--ease-spring),
+              padding 0.28s var(--ease-soft),
+              box-shadow 0.3s var(--ease-soft);
 }
 
-/* 10 soniyalik avto-yopilish progress chizig'i */
+/* Sidebar timer bar butunlay olib tashlangan */
 .sidebar-timer-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 3px;
-  width: 0%;
-  background: linear-gradient(90deg, var(--primary), #818cf8);
-  opacity: 0;
-  pointer-events: none;
-  z-index: 60;
-  border-radius: 0 2px 2px 0;
-  transition: opacity 0.25s ease;
-}
-
-.sidebar-timer-bar.running {
-  opacity: 1;
-  width: 100%;
-  transition: width 10s linear, opacity 0.25s ease;
+  display: none !important;
 }
 
 .brand-wrapper {
@@ -212,7 +199,10 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  position: relative;
+  position: sticky;
+  top: 0;
+  background: var(--card);
+  z-index: 10;
   min-height: 44px;
 }
 
@@ -306,14 +296,19 @@ a {
   transform: translateX(0);
 }
 
-/* Collapsed Sidebar (Desktop) */
+/* Collapsed Sidebar (Desktop) — Faqat hover bo'lganda silliq ochiladi */
 @media (min-width: 901px) {
   .layout.sidebar-collapsed .sidebar {
     width: 72px;
     min-width: 72px;
     padding: 20px 8px;
+    transition: width 0.3s var(--ease-spring),
+                min-width 0.3s var(--ease-spring),
+                padding 0.28s var(--ease-soft),
+                box-shadow 0.3s var(--ease-soft);
   }
 
+  .layout.sidebar-collapsed .sidebar:hover,
   .layout.sidebar-collapsed .sidebar.hover-expanded {
     width: 240px;
     min-width: 240px;
@@ -322,21 +317,21 @@ a {
     z-index: 45;
   }
 
-  .layout.sidebar-collapsed .sidebar:not(.hover-expanded) .brand-wrapper {
+  .layout.sidebar-collapsed .sidebar:not(:hover):not(.hover-expanded) .brand-wrapper {
     padding: 4px 0 16px;
     justify-content: center;
   }
 
-  .layout.sidebar-collapsed .sidebar:not(.hover-expanded) .brand {
+  .layout.sidebar-collapsed .sidebar:not(:hover):not(.hover-expanded) .brand {
     justify-content: center;
   }
 
-  .layout.sidebar-collapsed .sidebar:not(.hover-expanded) .brand:hover .logo-box {
+  .layout.sidebar-collapsed .sidebar:not(:hover):not(.hover-expanded) .brand:hover .logo-box {
     transform: scale(1.18) rotate(6deg);
     box-shadow: 0 8px 22px var(--primary-glow);
   }
 
-  .layout.sidebar-collapsed .sidebar:not(.hover-expanded) .brand-name {
+  .layout.sidebar-collapsed .sidebar:not(:hover):not(.hover-expanded) .brand-name {
     opacity: 0;
     transform: translateX(-8px);
     pointer-events: none;
@@ -344,7 +339,7 @@ a {
     overflow: hidden;
   }
 
-  .layout.sidebar-collapsed .sidebar:not(.hover-expanded) .sidebar-header-actions {
+  .layout.sidebar-collapsed .sidebar:not(:hover):not(.hover-expanded) .sidebar-header-actions {
     opacity: 0;
     transform: scale(0.7);
     pointer-events: none;
@@ -352,13 +347,13 @@ a {
     overflow: hidden;
   }
 
-  .layout.sidebar-collapsed .sidebar:not(.hover-expanded) .nav a {
+  .layout.sidebar-collapsed .sidebar:not(:hover):not(.hover-expanded) .nav a {
     justify-content: center;
     padding: 11px 0;
     gap: 0;
   }
 
-  .layout.sidebar-collapsed .sidebar:not(.hover-expanded) .nav a span {
+  .layout.sidebar-collapsed .sidebar:not(:hover):not(.hover-expanded) .nav a span {
     opacity: 0;
     transform: translateX(-8px);
     pointer-events: none;
@@ -366,17 +361,17 @@ a {
     overflow: hidden;
   }
 
-  .layout.sidebar-collapsed .sidebar:not(.hover-expanded) .nav a svg {
+  .layout.sidebar-collapsed .sidebar:not(:hover):not(.hover-expanded) .nav a svg {
     margin: 0 auto;
   }
 
-  .layout.sidebar-collapsed .sidebar:not(.hover-expanded) .logout-btn {
+  .layout.sidebar-collapsed .sidebar:not(:hover):not(.hover-expanded) .logout-btn {
     justify-content: center;
     padding: 11px 0;
     gap: 0;
   }
 
-  .layout.sidebar-collapsed .sidebar:not(.hover-expanded) .logout-btn span {
+  .layout.sidebar-collapsed .sidebar:not(:hover):not(.hover-expanded) .logout-btn span {
     opacity: 0;
     transform: translateX(-8px);
     pointer-events: none;
@@ -548,7 +543,12 @@ a {
 .sidebar .bottom {
   margin-top: auto;
   padding-top: 14px;
+  padding-bottom: 4px;
   border-top: 1px solid var(--line);
+  position: sticky;
+  bottom: 0;
+  background: var(--card);
+  z-index: 10;
 }
 
 .sidebar .logout-btn {
@@ -1409,6 +1409,44 @@ tr.click:hover td {
 .grade-btn.g2.on { background: #ef4444; color: #fff; border-color: #ef4444; box-shadow: 0 3px 8px rgba(239, 68, 68, 0.35); transform: scale(1.08); }
 .grade-btn.g1.on { background: #991b1b; color: #fff; border-color: #991b1b; box-shadow: 0 3px 8px rgba(153, 27, 27, 0.35); transform: scale(1.08); }
 
+/* Kelmagan yoki sababli o'quvchiga baho qo'yish bloklanishi (cursor: not-allowed) */
+.grade-picker.blocked {
+  cursor: not-allowed !important;
+  opacity: 0.45;
+}
+
+.grade-picker.blocked .grade-btn,
+.grade-btn.blocked,
+.grade-btn:disabled {
+  cursor: not-allowed !important;
+  pointer-events: auto !important;
+  opacity: 0.35 !important;
+  background: var(--bg-soft, #f1f5f9) !important;
+  color: var(--muted, #94a3b8) !important;
+  border-color: var(--line, #e2e8f0) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.grade-picker.blocked .grade-btn:hover,
+.grade-btn.blocked:hover,
+.grade-btn:disabled:hover {
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: var(--line, #e2e8f0) !important;
+  color: var(--muted, #94a3b8) !important;
+  background: var(--bg-soft, #f1f5f9) !important;
+}
+
+[data-theme="dark"] .grade-picker.blocked .grade-btn,
+[data-theme="dark"] .grade-btn.blocked,
+[data-theme="dark"] .grade-btn:disabled {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #64748b !important;
+}
+
 /* Modal ichidagi katta baho tugmalari */
 .grade-btn-large {
   width: 48px;
@@ -2117,108 +2155,191 @@ tr.click:hover td {
   font-size: 18px;
 }
 
-/* Preloader / Refresh Loader Animatsiyasi */
-.preloader {
+/* Saytga kirishda loader animatsiyasi ko'rinmasin (butunlay bloklangan) */
+.preloader, #app-preloader {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Net Loader — Faqat internet past yoki ishlamay qolganda chiqadigan loader animatsiyasi */
+.net-loader {
   position: fixed;
   inset: 0;
-  background: var(--bg);
   z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.5s var(--ease-soft), visibility 0.5s var(--ease-soft), transform 0.5s var(--ease-soft);
+  padding: 16px;
+  pointer-events: auto;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-.preloader.fade-out {
+.net-loader.hidden {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.net-loader.fade-out {
   opacity: 0;
   visibility: hidden;
-  transform: scale(1.02);
   pointer-events: none;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-.preloader-inner {
+.net-loader-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.net-loader-card {
+  position: relative;
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 20px;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  padding: 24px 28px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 24px;
+  max-width: 360px;
+  width: 90%;
+  z-index: 1;
+  animation: netLoaderPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.preloader-logo-wrap {
-  position: relative;
-  width: 76px;
-  height: 76px;
+[data-theme="dark"] .net-loader-card {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.7);
+}
+
+.net-loader-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-soft, #f1f5f9);
+  color: var(--muted, #64748b);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
   display: grid;
   place-items: center;
-  margin-bottom: 20px;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
 }
 
-.preloader-logo {
-  width: 52px;
-  height: 52px;
-  background: linear-gradient(135deg, var(--primary), #818cf8);
-  border-radius: 16px;
+.net-loader-close:hover {
+  background: #ef4444;
+  color: #fff;
+  transform: scale(1.08);
+}
+
+[data-theme="dark"] .net-loader-close {
+  background: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .net-loader-close:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+.net-loader-logo-wrap {
+  position: relative;
+  width: 68px;
+  height: 68px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 16px;
+}
+
+.net-loader-logo {
+  width: 46px;
+  height: 46px;
+  background: linear-gradient(135deg, var(--primary, #4f46e5), #818cf8);
+  border-radius: 14px;
   color: #fff;
   font-weight: 800;
-  font-size: 26px;
+  font-size: 22px;
   display: grid;
   place-items: center;
-  box-shadow: 0 10px 28px rgba(79, 70, 229, 0.35);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
   animation: preloaderPulse 2s infinite ease-in-out;
 }
 
-.preloader-spinner {
+.net-loader-spinner {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 3px solid rgba(79, 70, 229, 0.12);
-  border-top-color: var(--primary);
-  border-right-color: var(--primary);
+  border: 3px solid rgba(79, 70, 229, 0.15);
+  border-top-color: var(--primary, #4f46e5);
+  border-right-color: var(--primary, #4f46e5);
   animation: preloaderSpin 0.9s infinite linear;
 }
 
-[data-theme="dark"] .preloader-spinner {
-  border-color: rgba(99, 102, 241, 0.18);
+[data-theme="dark"] .net-loader-spinner {
+  border-color: rgba(129, 140, 248, 0.2);
   border-top-color: #818cf8;
   border-right-color: #818cf8;
 }
 
-.preloader-text {
+.net-loader-text {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  margin-bottom: 22px;
+  gap: 4px;
+  margin-bottom: 16px;
 }
 
-.preloader-title {
-  font-size: 21px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--text);
+.net-loader-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text, #0f172a);
+  letter-spacing: -0.01em;
 }
 
-.preloader-sub {
-  font-size: 13.5px;
-  color: var(--muted);
+.net-loader-sub {
+  font-size: 13px;
+  color: var(--muted, #64748b);
   font-weight: 500;
+  line-height: 1.4;
 }
 
-.preloader-bar {
-  width: 150px;
+.net-loader-bar {
+  width: 140px;
   height: 4px;
-  background: var(--line);
+  background: var(--line, #e2e8f0);
   border-radius: 99px;
   overflow: hidden;
   position: relative;
 }
 
-.preloader-bar-fill {
+[data-theme="dark"] .net-loader-bar {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.net-loader-bar-fill {
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), #818cf8);
+  background: linear-gradient(90deg, var(--primary, #4f46e5), #818cf8);
   border-radius: 99px;
   animation: preloaderBar 1.3s infinite ease-in-out;
   transform-origin: left;
+}
+
+@keyframes netLoaderPop {
+  0% { transform: scale(0.92); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 @keyframes preloaderSpin {
@@ -2360,7 +2481,9 @@ html, body {
 }
 
 @media (max-width: 900px) {
-  .layout { grid-template-columns: 1fr; }
+  .layout, .layout.sidebar-collapsed {
+    padding-left: 0;
+  }
   .sidebar {
     position: fixed;
     left: 0;

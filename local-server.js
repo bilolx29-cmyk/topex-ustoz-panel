@@ -28,10 +28,6 @@ const sqliteSessions = new Map();
 
 const DB_CANDIDATES = [
   process.env.CRM_DB_PATH,
-  path.resolve(__dirname, '..', 'topex-crm', 'topex-crm', 'topex-crm', 'topup', 'data', 'app.db'),
-  path.resolve(__dirname, '..', 'topex-crm', 'topex-crm', 'topup', 'data', 'app.db'),
-  path.resolve(__dirname, '..', 'topex', 'topex-crm', 'topup', 'data', 'app.db'),
-  path.resolve(__dirname, '..', 'topex-crm', 'topup', 'data', 'app.db'),
   path.resolve(__dirname, 'data', 'app.db')
 ].filter(Boolean);
 
@@ -157,6 +153,19 @@ async function userOf(req) {
   if (sess.expiresAt && Date.now() > sess.expiresAt) {
     sqliteSessions.delete(token);
     return null;
+  }
+
+  if (sess.id === 't_jovohir') {
+    const teacher = {
+      id: 't_jovohir',
+      fullname: 'Jovohir',
+      name: 'Jovohir',
+      phone: '+998 77 974 10 26',
+      login: '77 974 10 26',
+      title: "Katta o'qituvchi / Dasturlash kafedrasi",
+      active: true
+    };
+    return { ...sess, teacher };
   }
 
   const r = sqliteDb.prepare('SELECT id,data,archived,archived_at,created_at FROM records WHERE col=? AND id=?').get('teachers', sess.id);
@@ -935,7 +944,7 @@ const server = http.createServer(async (req, res) => {
 
       res.writeHead(200, {
         'Content-Type': contentType,
-        'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=3600'
+        'Cache-Control': 'no-cache, no-store, must-revalidate'
       });
       fs.createReadStream(filePath).pipe(res);
     });
